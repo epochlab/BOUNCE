@@ -32,8 +32,8 @@ void main() {
         FragColor = vec4(clamp(vFragPos * 0.1 + 0.5, 0.0, 1.0), 1.0);
 
     } else if (uViewMode == 6) {
-        // UV coordinates as RG gradient
-        FragColor = vec4(vUV, 0.0, 1.0);
+        // UV coordinates — fract so tiled surfaces show per-tile [0,1] gradient
+        FragColor = vec4(fract(vUV), 0.0, 1.0);
 
     } else {
         // Mode 1 — diffuse + albedo texture
