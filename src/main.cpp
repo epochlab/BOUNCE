@@ -74,9 +74,10 @@ struct RenderTarget {
 
 int main() {
     try {
-        constexpr int RENDER_SCALE = 2;   // 1=full, 2=half, 4=quarter
+        constexpr int BASE_W = 2048, BASE_H = 1152;
+        constexpr int RENDER_SCALE = 2;   // window = BASE/SCALE logical pixels
 
-        Window win(2048, 1152, "Renderer");
+        Window win(BASE_W / RENDER_SCALE, BASE_H / RENDER_SCALE, "Renderer");
         glfwSetInputMode(win.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         glfwSetCursorPosCallback(win.handle(), onMouseMove);
         // Reset camera mouse state on resize to prevent jump
@@ -141,10 +142,8 @@ int main() {
             camera.setAspect(win.aspectRatio());
             camera.processInput(win.handle(), dt);
 
-            // ── Ensure FBO matches current scaled resolution ──────
-            int rtW = win.width()  / RENDER_SCALE;
-            int rtH = win.height() / RENDER_SCALE;
-            rt.ensureSize(rtW, rtH);
+            // ── Ensure FBO matches physical framebuffer (1:1) ────
+            rt.ensureSize(win.width(), win.height());
 
             // ── Read last frame's GPU timer ────────────────────────
             if (gpuQueryActive) {
@@ -156,7 +155,7 @@ int main() {
 
             // ── Render scene → off-screen FBO ──────────────────────
             glBindFramebuffer(GL_FRAMEBUFFER, rt.fbo);
-            glViewport(0, 0, rtW, rtH);
+            glViewport(0, 0, win.width(), win.height());
             glEnable(GL_DEPTH_TEST);
             glClearColor(0.08f, 0.10f, 0.14f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -214,7 +213,6 @@ int main() {
             stats.totalVertices  = cube.indexCount()    + sphere.indexCount()    + ground.indexCount();
             stats.width          = win.width();
             stats.height         = win.height();
-            stats.renderScale    = RENDER_SCALE;
             stats.camPos             = camera.position();
             stats.camRotX            = camera.pitch();
             stats.camRotY            = camera.yaw();
