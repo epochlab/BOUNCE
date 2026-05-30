@@ -100,7 +100,7 @@ Mesh Mesh::cube() {
 
 Mesh Mesh::plane(float size) {
     float h = size * 0.5f;
-    float t = size;  // tile UVs across the plane
+    float t = 1.0f;  // UVs span 0→1 across the full plane
     std::vector<Vertex> v = {
         {-h, 0,-h,  0,1,0,  0,0}, { h, 0,-h,  0,1,0,  t,0},
         { h, 0, h,  0,1,0,  t,t}, {-h, 0, h,  0,1,0,  0,t},
