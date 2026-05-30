@@ -40,7 +40,7 @@ static float queryMemoryMB() {
 
 int main() {
     try {
-        Window win(1280, 720, "Renderer");
+        Window win(2048, 1152, "Renderer");
         glfwSetInputMode(win.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         glfwSetCursorPosCallback(win.handle(), onMouseMove);
 
@@ -48,7 +48,7 @@ int main() {
         shader.use();
         shader.set("uAlbedo", 0);
 
-        Camera camera({0.0f, 1.5f, 6.0f}, win.aspectRatio());
+        Camera camera({0.0f, 1.0f, 10.0f}, win.aspectRatio());
         g_camera = &camera;
 
         HUD hud(win.handle());
