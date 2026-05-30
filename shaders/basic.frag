@@ -7,10 +7,10 @@ in vec2 vUV;
 
 uniform sampler2D uAlbedo;
 uniform sampler2D uSkyHDR;          // equirectangular HDRI for diffuse irradiance
-uniform int       uViewMode;        // 1=diffuse 2=wire 3=alpha 4=depth 5=pos 6=normals 7=uv 8=irradiance 9=ao
+uniform int       uViewMode;        // 1=beauty 2=wire 3=alpha 4=depth 5=pos 6=normals 7=uv 8=albedo 9=direct_diffuse 10=ao
 uniform float     uNear;
 uniform float     uFar;
-uniform float     uIrradianceScale; // light.exposure × light.intensity from config
+uniform float     uIrradianceScale;
 
 layout(location = 0) out vec4 gColor;
 layout(location = 1) out vec4 gNormal;  // view-space normals for SSAO
@@ -24,10 +24,10 @@ vec3 sampleEnv(vec3 n) {
 }
 
 void main() {
-    // Always write view-space normals for SSAO G-buffer.
     gNormal = vec4(normalize(vNormalVS) * 0.5 + 0.5, 1.0);
 
     if (uViewMode == 2) {
+        // Wireframe
         gColor = vec4(0.35, 0.85, 1.0, 1.0);
 
     } else if (uViewMode == 3) {
@@ -54,11 +54,15 @@ void main() {
         gColor = vec4(fract(vUV), 0.0, 1.0);
 
     } else if (uViewMode == 8) {
-        // Irradiance only — HDRI diffuse, no albedo
+        // Albedo — raw texture, no lighting
+        gColor = vec4(texture(uAlbedo, vUV).rgb, 1.0);
+
+    } else if (uViewMode == 9) {
+        // Direct Diffuse — HDRI irradiance only, no albedo
         gColor = vec4(sampleEnv(normalize(vNormal)) * uIrradianceScale, 1.0);
 
     } else {
-        // Mode 1 — albedo × HDRI diffuse irradiance
+        // Mode 1 (Beauty) and mode 10 (AO, display overridden by blit.frag)
         vec3 albedo     = texture(uAlbedo, vUV).rgb;
         vec3 irradiance = sampleEnv(normalize(vNormal)) * uIrradianceScale;
         gColor = vec4(albedo * irradiance, 1.0);

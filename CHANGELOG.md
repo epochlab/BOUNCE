@@ -14,8 +14,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Render scale fix**: FBO always renders at `BASE_W × BASE_H` (2048×1152); no longer inflated by Retina display scale
 - **Z-up → Y-up correction**: model loader applies −90° X rotation to imported geometry
 - **Model name**: `Model::name()` derived from filename; HUD now shows the actual asset name instead of hardcoded "rock"
-- **9 view modes** (keys 1–9): Diffuse | Wireframe | Alpha | Depth | Position | Normals | UV | Irradiance | AO
+- **10 view modes** (keys 1–9 + 0): Beauty | Wireframe | Alpha | Depth | Position | Normals | UV | Albedo | Direct Diffuse | AO
+- HDRI sky background only visible in Beauty mode; all other modes have black background
 - **Alpha channel** (mode 3): samples albedo texture `.a`; textures now loaded as RGBA8
+- **Albedo channel** (mode 8): raw texture, no lighting
+- **Direct Diffuse** (mode 9, renamed from Irradiance): HDRI irradiance without albedo
 - **SSAO** (mode 9): G-buffer with view-space normals + depth texture; 64-sample hemisphere kernel (deterministic seed 42); 5×5 blur pass; applied as AO multiplier in mode 1
 - **HDRI rotation** (`profile.json` → `hdri.rotation`): XYZ Euler rotation applied to sky direction each frame
 - **HDRI exposure** (`profile.json` → `hdri.exposure`): per-frame sky brightness multiplier

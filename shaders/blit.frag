@@ -9,14 +9,10 @@ uniform int       uViewMode;
 out vec4 FragColor;
 
 void main() {
-    vec3  color = texture(uFrame, vUV).rgb;
-    float ao    = texture(uAO,    vUV).r;
-
-    if (uViewMode == 9) {
+    if (uViewMode == 10) {
+        float ao = texture(uAO, vUV).r;
         FragColor = vec4(ao, ao, ao, 1.0);
-    } else if (uViewMode == 1) {
-        FragColor = vec4(color * ao, 1.0);
     } else {
-        FragColor = vec4(color, 1.0);
+        FragColor = vec4(texture(uFrame, vUV).rgb, 1.0);
     }
 }

@@ -40,15 +40,16 @@ Run from the **project root** (shaders load relative to the working directory):
 
 | Key | Mode |
 |-----|------|
-| 1 | Diffuse (albedo × HDRI irradiance × AO) |
+| 1 | Beauty (albedo × HDRI irradiance) |
 | 2 | Wireframe |
 | 3 | Alpha |
 | 4 | Depth |
 | 5 | Position |
 | 6 | Normals |
 | 7 | UV |
-| 8 | Irradiance |
-| 9 | AO (SSAO) |
+| 8 | Albedo |
+| 9 | Direct Diffuse |
+| 0 | AO (SSAO) |
 
 ## Dependencies
 

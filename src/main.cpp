@@ -32,11 +32,11 @@ static void onMouseMove(GLFWwindow*, double xpos, double ypos) {
 
 static const char* viewModeName(int m) {
     switch (m) {
-        case 1: return "Diffuse";    case 2: return "Wireframe";
-        case 3: return "Alpha";      case 4: return "Depth";
-        case 5: return "Position";   case 6: return "Normals";
-        case 7: return "UV";         case 8: return "Irradiance";
-        case 9: return "AO";
+        case 1:  return "Beauty";        case 2:  return "Wireframe";
+        case 3:  return "Alpha";         case 4:  return "Depth";
+        case 5:  return "Position";      case 6:  return "Normals";
+        case 7:  return "UV";            case 8:  return "Albedo";
+        case 9:  return "Direct Diffuse"; case 10: return "AO";
         default: return "Unknown";
     }
 }
@@ -232,8 +232,8 @@ int main() {
         glGenQueries(GPU_QUERY_FRAMES, gpuQueries);
 
         FrameStats stats{};
-        int    viewMode   = 1;
-        bool   prevKeys[9] = {};
+        int    viewMode    = 1;
+        bool   prevKeys[10] = {};
         bool   prevSpace  = false;
         bool   prevH      = false;
         bool   prevK      = false;
@@ -295,12 +295,12 @@ int main() {
             }
             prevK = kNow;
 
-            // ── View mode keys 1–9 ────────────────────────────────
-            static const int viewKeys[9] = {
+            // ── View mode keys 1–9 + 0 (mode 10 = AO) ───────────
+            static const int viewKeys[10] = {
                 GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5,
-                GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9
+                GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9, GLFW_KEY_0
             };
-            for (int i = 0; i < 9; ++i) {
+            for (int i = 0; i < 10; ++i) {
                 bool down = glfwGetKey(win.handle(), viewKeys[i]) == GLFW_PRESS;
                 if (down && !prevKeys[i]) viewMode = i + 1;
                 prevKeys[i] = down;
@@ -348,7 +348,7 @@ int main() {
             glBeginQuery(GL_TIME_ELAPSED, gpuQueries[queryWrite]);
 
             // Sky draw (depth test + write off — drawn at far plane, never occludes).
-            if (cfg.hdri.visible) {
+            if (cfg.hdri.visible && viewMode == 1) {
                 glDisable(GL_DEPTH_TEST);
                 glDepthMask(GL_FALSE);
                 skyShader.use();
