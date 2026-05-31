@@ -77,6 +77,7 @@ Texture Texture::flatNormal() {
     return Texture(id);
 }
 
+
 Texture Texture::white() {
     GLuint id;
     glGenTextures(1, &id);
