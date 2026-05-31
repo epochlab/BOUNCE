@@ -79,6 +79,7 @@ vec3 irradianceIBL(vec3 n, float roughness) {
 // roughness=0 → perfect mirror. roughness=1 → cosine-weighted hemisphere on the surface
 // normal (= diffuse irradiance). Lobe centre shifts from reflect dir to normal as a=r² grows.
 vec3 reflectionIBL(vec3 n, vec3 v, float roughness) {
+    roughness = clamp(roughness, 0.0, 1.0);
     float a   = roughness * roughness;
     vec3  r   = reflect(-v, n);
     // Shift lobe centre: reflection dir at roughness=0, surface normal at roughness=1.
@@ -101,7 +102,9 @@ vec3 reflectionIBL(vec3 n, vec3 v, float roughness) {
     return acc / float(uIblSamples);
 }
 
+// IOR must be > 1 for a real interface; IOR=1 → F0=0 → no reflection at any angle.
 vec3 schlickFresnel(vec3 F0, float cosTheta) {
+    if (dot(F0, F0) < 1e-8) return vec3(0.0);
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
