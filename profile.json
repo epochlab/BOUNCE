@@ -14,7 +14,7 @@
   },
   "hdri": {
     "exposure": 2.0,
-    "path": "assets/hdr/HDR_111_Parking_Lot_2/HDR_111_Parking_Lot_2_Bg.jpg",
+    "path": "assets/hdr/HDR_110_Tunnel/HDR_110_Tunnel_Bg.jpg",
     "rotation": [
       0.0,
       0.0,
@@ -37,7 +37,7 @@
     ]
   },
   "shading": {
-    "roughness": 0.9,
+    "roughness": 0.85,
     "metallic": 0.0,
     "ior": 1.5,
     "ssaoBias": 0.025,
