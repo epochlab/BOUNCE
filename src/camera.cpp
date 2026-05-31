@@ -46,8 +46,16 @@ void Camera::setPitch(float deg) {
 }
 
 void Camera::setOrbitPivot(glm::vec3 pivot) {
-    m_pivot    = pivot;
-    m_radius   = std::max(0.01f, glm::length(m_pos - pivot));
+    m_pivot  = pivot;
+    m_radius = std::max(0.01f, glm::length(m_pos - pivot));
+
+    // Align yaw/pitch to point camera → pivot so that the orbit constraint
+    // m_pos = pivot - radius * front() evaluates to the current position.
+    // This prevents any position jump on the first mouse move.
+    glm::vec3 dir = glm::normalize(pivot - m_pos);
+    m_pitch = glm::degrees(std::asin(glm::clamp(dir.y, -1.f, 1.f)));
+    m_yaw   = glm::degrees(std::atan2(dir.z, dir.x));
+
     m_orbiting = true;
 }
 
