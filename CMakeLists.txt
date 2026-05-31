@@ -90,7 +90,6 @@ target_compile_definitions(KODAK PRIVATE
 )
 
 target_link_libraries(KODAK PRIVATE
-    glfw
     OpenGL::GL
     glm::glm
     imgui_lib
