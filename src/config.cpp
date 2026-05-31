@@ -68,3 +68,33 @@ AppConfig loadConfig(const std::string& path) {
 
     return cfg;
 }
+
+void saveConfig(const AppConfig& cfg, const std::string& path) {
+    json j;
+    j["camera"] = {
+        {"position",    {cfg.camera.position.x, cfg.camera.position.y, cfg.camera.position.z}},
+        {"yaw",         cfg.camera.yaw},
+        {"pitch",       cfg.camera.pitch},
+        {"near",        cfg.camera.near},
+        {"far",         cfg.camera.far},
+        {"filmback",    cfg.camera.filmback},
+        {"focalLength", cfg.camera.focalLength}
+    };
+    j["render"] = {{"scale", cfg.render.scale}};
+    j["hdri"] = {
+        {"path",     cfg.hdri.path},
+        {"rotation", {cfg.hdri.rotation.x, cfg.hdri.rotation.y, cfg.hdri.rotation.z}},
+        {"visible",  cfg.hdri.visible},
+        {"exposure", cfg.hdri.exposure}
+    };
+    j["scene"] = {
+        {"geometry", cfg.scene.geometry},
+        {"rotation", {cfg.scene.rotation.x, cfg.scene.rotation.y, cfg.scene.rotation.z}}
+    };
+
+    std::ofstream f(path);
+    if (f.is_open())
+        f << j.dump(2) << '\n';
+    else
+        std::cerr << "saveConfig: could not write " << path << '\n';
+}

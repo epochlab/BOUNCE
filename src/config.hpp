@@ -32,3 +32,6 @@ struct AppConfig {
 
 // Returns defaults when the file is absent or a key is missing.
 AppConfig loadConfig(const std::string& path);
+
+// Writes cfg back to path, preserving JSON field order.
+void saveConfig(const AppConfig& cfg, const std::string& path);

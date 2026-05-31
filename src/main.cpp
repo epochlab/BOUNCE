@@ -238,6 +238,8 @@ int main() {
         bool   prevSpace  = false;
         bool   prevH      = false;
         bool   prevK      = false;
+        bool   prevJ      = false;
+        bool   prevB      = false;
         bool   showHUD    = true;
         float  smoothFps  = 0.0f;
         double lastTime   = glfwGetTime();
@@ -246,6 +248,8 @@ int main() {
             glm::radians(cfg.hdri.rotation.x),
             glm::radians(cfg.hdri.rotation.y),
             glm::radians(cfg.hdri.rotation.z));
+
+        bool skyVisible = cfg.hdri.visible;
 
         glm::mat4 sceneRot(1.0f);
         sceneRot = glm::rotate(sceneRot, glm::radians(cfg.scene.rotation.x), glm::vec3(1,0,0));
@@ -300,6 +304,26 @@ int main() {
             }
             prevK = kNow;
 
+            // ── J: save camera pos/rot as profile default ─────────
+            bool jNow = glfwGetKey(win.handle(), GLFW_KEY_J) == GLFW_PRESS;
+            if (jNow && !prevJ) {
+                cfg.camera.position = camera.position();
+                cfg.camera.yaw      = camera.yaw();
+                cfg.camera.pitch    = camera.pitch();
+                saveConfig(cfg, "profile.json");
+                std::cout << "Profile saved: pos("
+                    << cfg.camera.position.x << ", "
+                    << cfg.camera.position.y << ", "
+                    << cfg.camera.position.z << ") yaw="
+                    << cfg.camera.yaw << " pitch=" << cfg.camera.pitch << '\n';
+            }
+            prevJ = jNow;
+
+            // ── B: toggle sky background ───────────────────────────
+            bool bNow = glfwGetKey(win.handle(), GLFW_KEY_B) == GLFW_PRESS;
+            if (bNow && !prevB) skyVisible = !skyVisible;
+            prevB = bNow;
+
             // ── View mode keys 1–9 + 0 (mode 10 = AO) ───────────
             static const int viewKeys[10] = {
                 GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5,
@@ -344,7 +368,8 @@ int main() {
             shader.set("uViewMode",        viewMode);
             shader.set("uNear",            camera.nearPlane());
             shader.set("uFar",             camera.farPlane());
-            shader.set("uHdriExposure", cfg.hdri.exposure);
+            shader.set("uHdriExposure",    cfg.hdri.exposure);
+            shader.set("uHdriRot",         hdriRotRad);
 
             const glm::mat4 mRock = sceneRot * rock.transform();
             Frustum frustum;
@@ -353,7 +378,7 @@ int main() {
             glBeginQuery(GL_TIME_ELAPSED, gpuQueries[queryWrite]);
 
             // Sky draw (depth test + write off — drawn at far plane, never occludes).
-            if (cfg.hdri.visible && viewMode == 1) {
+            if (skyVisible && viewMode == 1) {
                 glDisable(GL_DEPTH_TEST);
                 glDepthMask(GL_FALSE);
                 skyShader.use();
