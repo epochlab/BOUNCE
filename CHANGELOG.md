@@ -4,6 +4,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Render Performance] — 2026-05-31
+
+- **Release build preset** — `cmake --preset release` builds with `-O3` + LTO; executable at `build/release/KODAK`
+- **Uniform location cache** — `Shader::loc()` now caches `glGetUniformLocation` results; driver round-trip eliminated after first frame
+- **Normal matrix on CPU** — `transpose(inverse(uModel))` removed from vertex shader; computed once per frame as `mat3` and uploaded as `uNormalMatrix`
+- **HDRI rotation as `mat3`** — `rotateXYZ()` removed from `basic.frag` and `sky.frag`; rotation pre-built on CPU as `uHdriRotMat`, eliminating 6 trig calls per IBL sample per pixel
+- **`invProj` caching** — only recomputed when projection matrix changes; skipped on every static frame
+- **`invVP` hoisted** — single `glm::inverse(proj * view)` computed once and reused for sky shader
+- **Half-resolution SSAO** — SSAO and blur passes run at `BASE_W/2 × BASE_H/2`; blur output uses `GL_LINEAR` for smooth blit upsampling; quarters fragment invocations
+- **Syscall throttling** — `task_info` memory query and `glfwGetWindowSize` moved to every 60 frames, eliminating the periodic frame-pacing spikes visible in the HUD frame-time graph
+
+---
+
 ## [Rename & Cleanup] — 2026-05-31
 
 - **Project renamed** to KODAK; executable, window title, and screenshot prefix updated

@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <unordered_map>
 
 class Shader {
 public:
@@ -13,6 +14,7 @@ public:
 
     void use() const;
     void set(const std::string& name, const glm::mat4& m) const;
+    void set(const std::string& name, const glm::mat3& m) const;
     void set(const std::string& name, const glm::vec3& v) const;
     void set(const std::string& name, const glm::vec2& v) const;
     void set(const std::string& name, float f) const;
@@ -21,6 +23,7 @@ public:
 
 private:
     GLuint m_program;
+    mutable std::unordered_map<std::string, GLint> m_locCache;
     GLint loc(const std::string& name) const;
     static GLuint compile(const std::string& path, GLenum type);
 };

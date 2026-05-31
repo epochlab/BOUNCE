@@ -6,6 +6,7 @@ layout(location = 2) in vec2 aUV;
 layout(location = 3) in vec4 aTangent;  // xyz = tangent, w = handedness
 
 uniform mat4 uModel;
+uniform mat3 uNormalMatrix;
 uniform mat4 uView;
 uniform mat4 uProjection;
 
@@ -20,13 +21,12 @@ void main() {
     vFragPos  = vec3(worldPos);
     vUV       = aUV;
 
-    mat3 normalMat = mat3(transpose(inverse(uModel)));
-    vec3 N = normalize(normalMat * aNormal);
+    vec3 N = normalize(uNormalMatrix * aNormal);
 
     vNormal = N;
 
     if (dot(aTangent.xyz, aTangent.xyz) > 1e-5) {
-        vec3 T = normalize(normalMat * aTangent.xyz);
+        vec3 T = normalize(uNormalMatrix * aTangent.xyz);
         T = normalize(T - dot(T, N) * N);  // re-orthogonalise against N
         vTangent   = T;
         vBitangent = cross(N, T) * aTangent.w;

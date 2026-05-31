@@ -120,7 +120,9 @@ int main() {
         AppConfig cfg = loadConfig("profile.json");
         const int BASE_W      = cfg.render.width  > 0 ? cfg.render.width  : 2048;
         const int BASE_H      = cfg.render.height > 0 ? cfg.render.height : 1152;
-        const int downsample = cfg.render.downsample > 0 ? cfg.render.downsample : 2;
+        const int downsample  = cfg.render.downsample > 0 ? cfg.render.downsample : 2;
+        const int AO_W        = BASE_W / 2;
+        const int AO_H        = BASE_H / 2;
 
         Window win(BASE_W / downsample, BASE_H / downsample, "KODAK");
         glfwSetCursorPosCallback(win.handle(), onMouseMove);
@@ -206,7 +208,7 @@ int main() {
         ssaoShader.use();
         for (int i = 0; i < 64; ++i)
             ssaoShader.set("uKernel[" + std::to_string(i) + "]", ssaoKernel[i]);
-        ssaoShader.set("uNoiseScale", glm::vec2(BASE_W / 4.0f, BASE_H / 4.0f));
+        ssaoShader.set("uNoiseScale", glm::vec2(AO_W / 4.0f, AO_H / 4.0f));
 
         // ── Empty VAO for fullscreen draws (gl_VertexID-driven) ────
         GLuint blitVAO = 0;
@@ -216,8 +218,13 @@ int main() {
         SsaoTarget   ssaoRt{}, blurRt{};
 
         rt.create(BASE_W, BASE_H);
-        ssaoRt.create(BASE_W, BASE_H);
-        blurRt.create(BASE_W, BASE_H);
+        ssaoRt.create(AO_W, AO_H);
+        blurRt.create(AO_W, AO_H);
+        // Blur output is upsampled by the blit pass — use linear filter for smooth result.
+        glBindTexture(GL_TEXTURE_2D, blurRt.tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         // ── GPU timer ring ─────────────────────────────────────────
         constexpr int GPU_QUERY_FRAMES = 3;
@@ -239,6 +246,9 @@ int main() {
         bool skyVisible = cfg.hdri.visible;
 
         glm::mat4 lastView(1.f), lastProj(1.f);
+        glm::mat4 cachedInvProj(1.f);
+        int       memQueryCounter = 0;
+        int       lw = win.width(), lh = win.height();
 
         glm::mat4 sceneRot(1.0f);
         sceneRot = glm::rotate(sceneRot, glm::radians(cfg.scene.rotation.x), glm::vec3(1,0,0));
@@ -254,6 +264,10 @@ int main() {
                 glm::radians(cfg.hdri.rotation.x),
                 glm::radians(cfg.hdri.rotation.y),
                 glm::radians(cfg.hdri.rotation.z));
+            const glm::mat3 hdriRotMat = glm::mat3(
+                glm::rotate(glm::mat4(1.f), hdriRotRad.z, glm::vec3(0,0,1)) *
+                glm::rotate(glm::mat4(1.f), hdriRotRad.y, glm::vec3(0,1,0)) *
+                glm::rotate(glm::mat4(1.f), hdriRotRad.x, glm::vec3(1,0,0)));
 
             if (glfwGetKey(win.handle(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
                 glfwSetWindowShouldClose(win.handle(), GLFW_TRUE);
@@ -307,7 +321,9 @@ int main() {
 
             const glm::mat4 view = camera.viewMatrix();
             const glm::mat4 proj = camera.projectionMatrix();
-            const glm::mat4 invProj = glm::inverse(proj);
+            if (proj != lastProj) cachedInvProj = glm::inverse(proj);
+            const glm::mat4& invProj = cachedInvProj;
+            const glm::mat4  invVP   = glm::inverse(proj * view);
             lastView = view;
             lastProj = proj;
 
@@ -326,14 +342,16 @@ int main() {
             shader.set("uNear",            camera.nearPlane());
             shader.set("uFar",             camera.farPlane());
             shader.set("uHdriExposure",    cfg.hdri.exposure);
-            shader.set("uHdriRot",         hdriRotRad);
+            shader.set("uHdriRotMat",      hdriRotMat);
             shader.set("uHdriFlipV",       cfg.hdri.flipV);
             shader.set("uCamPos",          camera.position());
             shader.set("uRoughness",       cfg.shading.roughness);
             shader.set("uMetallic",        cfg.shading.metallic);
             shader.set("uIOR",             cfg.shading.ior);
 
-            const glm::mat4 geomMat = sceneRot * geom.transform();
+            const glm::mat4 geomMat    = sceneRot * geom.transform();
+            const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(geomMat)));
+            shader.set("uNormalMatrix", normalMatrix);
             Frustum frustum;
             frustum.update(proj * view);
 
@@ -344,8 +362,8 @@ int main() {
                 glDisable(GL_DEPTH_TEST);
                 glDepthMask(GL_FALSE);
                 skyShader.use();
-                skyShader.set("uInvVP",        glm::inverse(proj * view));
-                skyShader.set("uHdriRot",      hdriRotRad);
+                skyShader.set("uInvVP",        invVP);
+                skyShader.set("uHdriRotMat",   hdriRotMat);
                 skyShader.set("uHdriExposure", cfg.hdri.exposure);
                 skyShader.set("uHdriFlipV",    cfg.hdri.flipV);
                 skyTex.bind(0);
@@ -374,7 +392,7 @@ int main() {
 
             // ── SSAO pass ─────────────────────────────────────────
             glBindFramebuffer(GL_FRAMEBUFFER, ssaoRt.fbo);
-            glViewport(0, 0, BASE_W, BASE_H);
+            glViewport(0, 0, AO_W, AO_H);
             glDisable(GL_DEPTH_TEST);
             ssaoShader.use();
             ssaoShader.set("uProj",    proj);
@@ -415,7 +433,11 @@ int main() {
             stats.fpsSmooth     = smoothFps;
             stats.frameTimeMs   = dt * 1000.0f;
             stats.frameCap      = FRAME_CAP;
-            stats.memMB         = queryMemoryMB();
+            if (++memQueryCounter >= 60) {
+                memQueryCounter = 0;
+                stats.memMB = queryMemoryMB();
+                glfwGetWindowSize(win.handle(), &lw, &lh);
+            }
             stats.gpuAllocMB    = static_cast<float>(rt.bytes()) / (1024.0f * 1024.0f);
             stats.drawCalls     = drawn;
             stats.drawCallsTotal  = total;
@@ -425,8 +447,7 @@ int main() {
             stats.width         = BASE_W;
             stats.height        = BASE_H;
             stats.downsample    = downsample;
-            { int lw, lh; glfwGetWindowSize(win.handle(), &lw, &lh);
-              stats.logicalWidth = lw; stats.logicalHeight = lh; }
+            stats.logicalWidth = lw; stats.logicalHeight = lh;
             stats.camPos          = camera.position();
             stats.camRotX         = camera.pitch();
             stats.camRotY         = camera.yaw();

@@ -15,7 +15,7 @@ uniform int       uViewMode;   // 1=beauty  2=wire    3=alpha   4=depth    5=wor
 uniform float     uNear;
 uniform float     uFar;
 uniform float     uHdriExposure;
-uniform vec3      uHdriRot;    // XYZ Euler rotation in radians — must match sky shader
+uniform mat3      uHdriRotMat; // pre-built XYZ Euler rotation — must match sky shader
 uniform bool      uHdriFlipV;  // flip panorama vertically — must match sky shader
 uniform int       uIblSamples; // hemisphere sample count (profile.json render.iblSamples)
 uniform vec3      uCamPos;     // world-space camera position (for reflection vector)
@@ -30,18 +30,8 @@ layout(location = 1) out vec4 gNormal;  // view-space shading normals for SSAO
 const float PI  = 3.14159265358979;
 const float PHI = 2.3999632;  // golden angle = 2π/φ²
 
-vec3 rotateXYZ(vec3 v, vec3 angles) {
-    float cx = cos(angles.x), sx = sin(angles.x);
-    float cy = cos(angles.y), sy = sin(angles.y);
-    float cz = cos(angles.z), sz = sin(angles.z);
-    v = vec3(v.x, cx*v.y - sx*v.z, sx*v.y + cx*v.z);
-    v = vec3(cy*v.x + sy*v.z, v.y, -sy*v.x + cy*v.z);
-    v = vec3(cz*v.x - sz*v.y, sz*v.x + cz*v.y, v.z);
-    return v;
-}
-
 vec3 sampleEnvDir(vec3 dir) {
-    dir = rotateXYZ(dir, uHdriRot);
+    dir = uHdriRotMat * dir;
     float phi   = atan(dir.z, dir.x);
     float theta = acos(clamp(dir.y, -1.0, 1.0));
     float v     = uHdriFlipV ? theta / PI : 1.0 - theta / PI;

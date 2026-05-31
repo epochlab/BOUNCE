@@ -57,11 +57,17 @@ void Shader::use() const {
 }
 
 GLint Shader::loc(const std::string& name) const {
-    return glGetUniformLocation(m_program, name.c_str());
+    auto [it, inserted] = m_locCache.emplace(name, -1);
+    if (inserted) it->second = glGetUniformLocation(m_program, name.c_str());
+    return it->second;
 }
 
 void Shader::set(const std::string& name, const glm::mat4& m) const {
     glUniformMatrix4fv(loc(name), 1, GL_FALSE, glm::value_ptr(m));
+}
+
+void Shader::set(const std::string& name, const glm::mat3& m) const {
+    glUniformMatrix3fv(loc(name), 1, GL_FALSE, glm::value_ptr(m));
 }
 
 void Shader::set(const std::string& name, const glm::vec3& v) const {
