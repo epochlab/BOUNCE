@@ -8,11 +8,19 @@
 
 ## Build
 
+Configure (first time or after CMakeLists changes):
+
 ```bash
-cmake --preset dev && cmake --build --preset dev -j
+cmake --preset dev
 ```
 
-Output: `build/dev/renderer`
+Build:
+
+```bash
+cmake --build --preset dev -j
+```
+
+Output: `build/dev/KODAK`
 
 ## Run
 
