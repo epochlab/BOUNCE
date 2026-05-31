@@ -4,9 +4,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Rename & Cleanup] — 2026-05-31
+
+- **Project renamed** to KODAK; executable, window title, and screenshot prefix updated
+- **File menu removed** — Quit lives in the macOS app menu via `terminate:`; `doQuit` flag and handling path removed
+- **Dead code removed** — `Mesh::gpuBytes()` / `m_gpuBytes` (computed but never read)
+- **Geometry variable** renamed from `rock` → `geom` in main loop (asset-neutral)
+- **HDRI slider** label updated to "Y-axis"
+
+---
+
 ## [GUI & Debug Enhancements] — 2026-05-31
 
-- **Native macOS menu bar** — Cocoa/ObjC++ bridge (`menu_osx.mm`); File → Close; View → Sky Background, Capture, Set JSON, Show Panel (checkmarks stay in sync each frame)
+- **Native macOS menu bar** — Cocoa/ObjC++ bridge (`menu_osx.mm`); View → Sky Background, Capture, Set JSON, Show Panel (checkmarks stay in sync each frame)
 - **Crosshair** — white `+` always drawn at screen centre via ImGui background draw list, marking the camera orbit pivot sample point
 - **HDRI Y-rotation slider** — 1–360° live spinner in HUD; sky and IBL lighting rotate together
 - **HDRI Flip V** — toggle to flip the equirectangular panorama vertically in both `sky.frag` and `basic.frag`; persisted in `profile.json` as `hdri.flipV`
