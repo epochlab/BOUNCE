@@ -6,8 +6,6 @@
 #include <stb_image_write.h>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
-#include <chrono>
 #include <random>
 #include <string>
 #include <vector>
@@ -500,13 +498,6 @@ int main() {
                 hud.beginFrame();
                 hud.draw(stats);
                 hud.endFrame();
-            }
-
-            if (FRAME_CAP > 0) {
-                double target  = 1.0 / FRAME_CAP;
-                double elapsed = glfwGetTime() - now;
-                if (elapsed < target)
-                    std::this_thread::sleep_for(std::chrono::duration<double>(target - elapsed));
             }
 
             win.swapAndPoll();

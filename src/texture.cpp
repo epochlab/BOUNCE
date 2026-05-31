@@ -1,7 +1,6 @@
 #include "texture.hpp"
 #include <stb_image.h>
 #include <stdexcept>
-#include <utility>
 
 Texture::Texture(const std::string& path, GLenum wrapMode) {
     bool isHdr = path.size() >= 4 && path.substr(path.size() - 4) == ".hdr";
