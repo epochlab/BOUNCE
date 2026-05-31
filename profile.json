@@ -1,20 +1,20 @@
 {
   "camera": {
+    "far": 10.0,
+    "filmback": 35.0,
+    "focalLength": 50.0,
+    "near": 0.10000000149011612,
+    "pitch": 0.0,
     "position": [
       -0.23604854941368103,
       0.11997789889574051,
       2.7183213233947754
     ],
-    "pitch": 0.0,
-    "yaw": -90.0,
-    "filmback": 35.0,
-    "focalLength": 50.0,
-    "near": 0.10000000149011612,
-    "far": 100.0
+    "yaw": -90.0
   },
   "hdri": {
-    "path": "assets/hdr/HDR_111_Parking_Lot_2/HDR_111_Parking_Lot_2_Bg.jpg",
     "exposure": 2.0,
+    "path": "assets/hdr/HDR_111_Parking_Lot_2/HDR_111_Parking_Lot_2_Bg.jpg",
     "rotation": [
       0.0,
       0.0,
