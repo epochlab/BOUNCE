@@ -20,6 +20,8 @@ uniform vec3      uHdriRot;    // XYZ Euler rotation in radians — must match s
 uniform int       uIblSamples; // hemisphere sample count (profile.json render.iblSamples)
 uniform vec3      uCamPos;     // world-space camera position (for reflection vector)
 uniform float     uRoughness;  // PBR roughness: 0 = mirror, 1 = fully diffuse
+uniform float     uMetallic;  // 0 = dielectric, 1 = metal
+uniform float     uIOR;       // index of refraction for dielectrics (default 1.5)
 uniform mat4      uView;       // view matrix — used to transform shading normal for SSAO
 
 layout(location = 0) out vec4 gColor;
@@ -99,6 +101,10 @@ vec3 reflectionIBL(vec3 n, vec3 v, float roughness) {
     return acc / float(uIblSamples);
 }
 
+vec3 schlickFresnel(vec3 F0, float cosTheta) {
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
 void main() {
     // SSAO G-buffer: shading normal (with normal map) in view space.
     gNormal = vec4(normalize(mat3(uView) * shadingNormal()) * 0.5 + 0.5, 1.0);
@@ -135,24 +141,48 @@ void main() {
         gColor = vec4(texture(uAlbedo, vUV).rgb, 1.0);
 
     } else if (uViewMode == 9) {
-        // _diffuse — HDRI irradiance using shading normal, no albedo
-        gColor = vec4(irradianceIBL(shadingNormal(), uRoughness), 1.0);
+        // _diffuse — Fresnel-weighted diffuse lobe, no albedo
+        vec3  n       = shadingNormal();
+        vec3  viewDir = normalize(uCamPos - vFragPos);
+        float f0Dia   = pow((uIOR - 1.0) / (uIOR + 1.0), 2.0);
+        vec3  F0      = mix(vec3(f0Dia), vec3(1.0), uMetallic);
+        vec3  F       = schlickFresnel(F0, max(dot(n, viewDir), 0.0));
+        gColor = vec4((1.0 - F) * (1.0 - uMetallic) * irradianceIBL(n, uRoughness), 1.0);
 
     } else if (uViewMode == 10) {
-        // _refl — GGX-lobe IBL sample from shading normal
-        vec3 viewDir = normalize(uCamPos - vFragPos);
-        gColor = vec4(reflectionIBL(shadingNormal(), viewDir, uRoughness), 1.0);
+        // _refl — Fresnel-weighted specular lobe
+        vec3  n       = shadingNormal();
+        vec3  viewDir = normalize(uCamPos - vFragPos);
+        vec3  albedo  = texture(uAlbedo, vUV).rgb;
+        float f0Dia   = pow((uIOR - 1.0) / (uIOR + 1.0), 2.0);
+        vec3  F0      = mix(vec3(f0Dia), albedo, uMetallic);
+        vec3  F       = schlickFresnel(F0, max(dot(n, viewDir), 0.0));
+        gColor = vec4(F * reflectionIBL(n, viewDir, uRoughness), 1.0);
 
     } else if (uViewMode == 11) {
         // Shading Normal — TBN-perturbed normal visualised as colour
         gColor = vec4(shadingNormal() * 0.5 + 0.5, 1.0);
 
+    } else if (uViewMode == 13) {
+        // fresnel — Schlick F term at this fragment (drives diffuse/specular split)
+        vec3  n       = shadingNormal();
+        vec3  viewDir = normalize(uCamPos - vFragPos);
+        vec3  albedo  = texture(uAlbedo, vUV).rgb;
+        float f0Dia   = pow((uIOR - 1.0) / (uIOR + 1.0), 2.0);
+        vec3  F0      = mix(vec3(f0Dia), albedo, uMetallic);
+        vec3  F       = schlickFresnel(F0, max(dot(n, viewDir), 0.0));
+        gColor = vec4(F, 1.0);
+
     } else {
         // Mode 1 (Beauty) and mode 12 (AO, display overridden by blit.frag)
-        vec3 viewDir  = normalize(uCamPos - vFragPos);
-        vec3 albedo   = texture(uAlbedo, vUV).rgb;
-        vec3 diffuse  = albedo * irradianceIBL(shadingNormal(), uRoughness);
-        vec3 specular = reflectionIBL(shadingNormal(), viewDir, uRoughness);
-        gColor = vec4(mix(specular, diffuse, uRoughness), 1.0);
+        vec3  viewDir      = normalize(uCamPos - vFragPos);
+        vec3  albedo       = texture(uAlbedo, vUV).rgb;
+        vec3  n            = shadingNormal();
+        float f0Dielectric = pow((uIOR - 1.0) / (uIOR + 1.0), 2.0);
+        vec3  F0           = mix(vec3(f0Dielectric), albedo, uMetallic);
+        vec3  F            = schlickFresnel(F0, max(dot(n, viewDir), 0.0));
+        vec3  Ld = albedo * (1.0 - F) * (1.0 - uMetallic) * irradianceIBL(n, uRoughness);
+        vec3  Ls = F * reflectionIBL(n, viewDir, uRoughness);
+        gColor   = vec4(Ld + Ls, 1.0);
     }
 }

@@ -371,6 +371,8 @@ int main() {
             shader.set("uHdriRot",         hdriRotRad);
             shader.set("uCamPos",          camera.position());
             shader.set("uRoughness",       cfg.shading.roughness);
+            shader.set("uMetallic",        cfg.shading.metallic);
+            shader.set("uIOR",             cfg.shading.ior);
 
             const glm::mat4 mRock = sceneRot * rock.transform();
             Frustum frustum;
