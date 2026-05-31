@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <ctime>
-#include <sys/stat.h>
 #include "window.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
@@ -304,9 +303,10 @@ int main() {
             // ── K: screenshot ─────────────────────────────────────
             bool kNow = glfwGetKey(win.handle(), GLFW_KEY_K) == GLFW_PRESS;
             if (kNow && !prevK) {
-                mkdir("screenshots", 0755);
+                const char* home = getenv("HOME");
+                std::string desktop = home ? std::string(home) + "/Desktop" : ".";
                 std::time_t t = std::time(nullptr);
-                std::string fname = "screenshots/BOUNCE_" + std::to_string(t) + ".png";
+                std::string fname = desktop + "/BOUNCE_" + std::to_string(t) + ".png";
                 std::vector<unsigned char> pixels(BASE_W * BASE_H * 3);
                 glBindFramebuffer(GL_FRAMEBUFFER, rt.fbo);
                 glReadPixels(0, 0, BASE_W, BASE_H, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
