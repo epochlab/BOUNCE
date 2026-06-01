@@ -150,6 +150,11 @@ void HUD::draw(FrameStats& s) {
     ImGui::Text("Focal      %.1f mm", s.camFocalLengthMm);
     ImGui::Text("Near  %.2f   Far  %.1f", s.camNear, s.camFar);
 
+    // ── Lens ──────────────────────────────────────────────────
+    sectionHeader("Lens");
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::SliderFloat("##focalLength", &s.camFocalLengthMm, 8.0f, 200.0f, "Focal Length  %.0f mm");
+
     // ── GPU ───────────────────────────────────────────────────
     sectionHeader("GPU");
     ImGui::TextWrapped("%s", m_sys.renderer);
@@ -171,8 +176,8 @@ void HUD::draw(FrameStats& s) {
     sectionHeader("HDRI");
     ImGui::SetNextItemWidth(-1.0f);
     ImGui::SliderFloat("##hdriYaw", &s.hdriYawDeg, 1.0f, 360.0f, "Y-axis  %.0f deg");
-    ImGui::Checkbox("Flip V", &s.hdriFlipV);
-    ImGui::Checkbox("Sky", &s.skyVisible);
+    ImGui::Checkbox("Flip Y-Axis", &s.hdriFlipV);
+    ImGui::Checkbox("Enable Background", &s.skyVisible);
 
     ImGui::End();
 }

@@ -7,10 +7,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Hotkeys] — 2026-06-02
 
 - **Channel overlay hotkeys** — R/G/B toggle red, green, blue channel views as a post-composite overlay in `blit.frag` via a new `uChannelView` uniform; press the same key again to clear; works on top of any AOV
-- **Luminance hotkey (Y)** — toggles new AOV mode 15 (Rec. 709 luminance computed in `blit.frag`); press Y again to restore the previous AOV; also selectable from the AOV dropdown
+- **Luminance hotkey (Y)** — toggles new AOV mode 15 (Rec. 709 luminance computed in `blit.frag`); press Y again to restore the previous AOV; also selectable from the AOV dropdown as "luminance"
 - **HUD toggle (H)** — edge-triggered `H` key hides/shows the stats panel
-- **Slow movement (Shift+WASDQE)** — holding Left Shift applies a 0.2× speed multiplier in `camera.cpp` for precision positioning
-- **Sky checkbox** — sky background toggle moved from native menu-only to an ImGui checkbox in the HDRI section of the HUD panel; native menu still works bidirectionally
+- **Camera speed** — `moveSpeed` reduced from 2.5 to 1.25 units/sec (0.5×); no modifier key
+- **Focal length slider** — new Lens section in the HUD; 8–200 mm range, default 70 mm; live-updates the projection matrix; persisted by Save JSON
+- **Enable Background checkbox** — sky toggle added to the HDRI section of the HUD alongside the existing "Flip Y-Axis" checkbox; native menu still works bidirectionally; fixed sync ordering bug that caused HUD changes to be reverted on the next frame
+- **HUD labels** — "Flip V" renamed "Flip Y-Axis"; sky checkbox labelled "Enable Background"
 
 ---
 

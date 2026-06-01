@@ -576,14 +576,16 @@ int main() {
                 skyVisible       = menuFlags.skyVisible;
                 stats.skyVisible = menuFlags.skyVisible;
             }
-            menuFlags.skyVisible = skyVisible;
-            menuFlags.showPanel  = stats.showPanel;
-            syncOsxMenuBar(menuFlags);
 
             viewMode            = stats.viewMode;
             cfg.hdri.rotation.y = stats.hdriYawDeg;
             cfg.hdri.flipV      = stats.hdriFlipV;
             skyVisible          = stats.skyVisible;
+            camera.setFocalLength(stats.camFocalLengthMm);
+
+            menuFlags.skyVisible = skyVisible;
+            menuFlags.showPanel  = stats.showPanel;
+            syncOsxMenuBar(menuFlags);
 
             if (stats.doCapture) {
                 const char* home = getenv("HOME");
@@ -606,9 +608,10 @@ int main() {
             }
 
             if (stats.doSaveJson) {
-                cfg.camera.position = camera.position();
-                cfg.camera.yaw      = camera.yaw();
-                cfg.camera.pitch    = camera.pitch();
+                cfg.camera.position    = camera.position();
+                cfg.camera.yaw         = camera.yaw();
+                cfg.camera.pitch       = camera.pitch();
+                cfg.camera.focalLength = camera.focalLength();
                 saveConfig(cfg, "profile.json");
                 LOG_I("Profile saved.");
                 stats.doSaveJson = false;
