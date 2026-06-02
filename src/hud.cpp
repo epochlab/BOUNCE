@@ -178,12 +178,6 @@ void HUD::draw(FrameStats& s) {
     if (s.histValid) {
         sectionHeader("Histogram");
 
-        // Peak from interior bins only — clipping spikes (0, 255) don't set the scale.
-        uint32_t peak = 1;
-        for (int c = 0; c < 3; ++c)
-            for (int b = 1; b < 255; ++b)
-                peak = std::max(peak, s.hist[c][b]);
-
         bool isGray = true;
         for (int b = 0; b < 256 && isGray; ++b)
             isGray = (s.hist[0][b] == s.hist[1][b] && s.hist[1][b] == s.hist[2][b]);
@@ -196,17 +190,30 @@ void HUD::draw(FrameStats& s) {
 
         dl->AddRectFilled(pos, {pos.x + W, pos.y + H}, IM_COL32(18, 18, 18, 255));
 
-        // Pre-compute smoothed normalised heights for all 3 channels.
+        // Pre-compute normalised heights.
+        // Grayscale: full 256-bin peak, no smoothing — preserves spikes at 0/255 (alpha, depth).
+        // Colour: interior-only peak + 9-bin smooth — avoids clipping bins dominating scale.
         float smooth[3][256];
-        for (int c = 0; c < 3; ++c) {
-            for (int b = 0; b < 256; ++b) {
-                float sum = 0.0f; int cnt = 0;
-                for (int k = b - 4; k <= b + 4; ++k) {
-                    if (k < 0 || k > 255) continue;
-                    sum += sqrtf(float(std::min(s.hist[c][k], peak)) / float(peak));
-                    ++cnt;
+        if (isGray) {
+            uint32_t pk = 1;
+            for (int b = 0; b < 256; ++b) pk = std::max(pk, s.hist[0][b]);
+            for (int b = 0; b < 256; ++b)
+                smooth[0][b] = sqrtf(float(s.hist[0][b]) / float(pk));
+        } else {
+            uint32_t peak = 1;
+            for (int c = 0; c < 3; ++c)
+                for (int b = 1; b < 255; ++b)
+                    peak = std::max(peak, s.hist[c][b]);
+            for (int c = 0; c < 3; ++c) {
+                for (int b = 0; b < 256; ++b) {
+                    float sum = 0.0f; int cnt = 0;
+                    for (int k = b - 4; k <= b + 4; ++k) {
+                        if (k < 0 || k > 255) continue;
+                        sum += sqrtf(float(std::min(s.hist[c][k], peak)) / float(peak));
+                        ++cnt;
+                    }
+                    smooth[c][b] = sum / cnt;
                 }
-                smooth[c][b] = sum / cnt;
             }
         }
 
