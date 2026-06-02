@@ -256,11 +256,19 @@ void HUD::draw(FrameStats& s) {
 
         auto drawSmooth = [&](const float* vals, ImU32 fill, ImU32 line) {
             ImVec2 edge[256];
-            for (int b = 0; b < 256; ++b) {
+            for (int b = 0; b < 256; ++b)
                 edge[b] = {pos.x + (b + 0.5f) * bw, pos.y + H * (1.0f - vals[b])};
-                dl->AddRectFilled({pos.x + b * bw, edge[b].y},
-                                  {pos.x + (b + 1) * bw, pos.y + H}, fill);
-            }
+            ImVec2 pts[258];
+            pts[0] = {pos.x, pos.y + H};
+            for (int b = 0; b < 256; ++b) pts[b + 1] = edge[b];
+            pts[257] = {pos.x + W, pos.y + H};
+            // Disable fill AA: prevents per-sub-triangle fringes from AddConcavePolyFilled
+            // creating visible diagonal lines on internal triangulation edges.
+            // The outline (AddPolyline below) retains its own AA for the smooth top curve.
+            const ImDrawListFlags savedFlags = dl->Flags;
+            dl->Flags &= ~ImDrawListFlags_AntiAliasedFill;
+            dl->AddConcavePolyFilled(pts, 258, fill);
+            dl->Flags = savedFlags;
             dl->AddPolyline(edge, 256, line, 0, 1.0f);
         };
 
