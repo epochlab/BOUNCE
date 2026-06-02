@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include <algorithm>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -177,10 +178,11 @@ void HUD::draw(FrameStats& s) {
     if (s.histValid) {
         sectionHeader("Histogram");
 
+        // Peak from interior bins only — clipping spikes (0, 255) don't set the scale.
         uint32_t peak = 1;
         for (int c = 0; c < 3; ++c)
-            for (int b = 0; b < 256; ++b)
-                if (s.hist[c][b] > peak) peak = s.hist[c][b];
+            for (int b = 1; b < 255; ++b)
+                peak = std::max(peak, s.hist[c][b]);
 
         bool isGray = true;
         for (int b = 0; b < 256 && isGray; ++b)
@@ -194,23 +196,27 @@ void HUD::draw(FrameStats& s) {
 
         dl->AddRectFilled(pos, {pos.x + W, pos.y + H}, IM_COL32(18, 18, 18, 255));
 
-        auto drawCurve = [&](int c, ImU32 col) {
+        auto drawChannel = [&](int c, ImU32 fill, ImU32 line) {
+            ImVec2 edge[256];
             dl->PathClear();
             dl->PathLineTo({pos.x, pos.y + H});
             for (int b = 0; b < 256; ++b) {
-                float norm = sqrtf((float)s.hist[c][b] / (float)peak);
-                dl->PathLineTo({pos.x + (b + 0.5f) * bw, pos.y + H - norm * H});
+                uint32_t v = std::min(s.hist[c][b], peak);
+                float norm = sqrtf(float(v) / float(peak));
+                edge[b] = {pos.x + (b + 0.5f) * bw, pos.y + H * (1.0f - norm)};
+                dl->PathLineTo(edge[b]);
             }
             dl->PathLineTo({pos.x + W, pos.y + H});
-            dl->PathFillConvex(col);
+            dl->PathFillConvex(fill);
+            dl->AddPolyline(edge, 256, line, 0, 1.0f);
         };
 
         if (isGray) {
-            drawCurve(0, IM_COL32(204, 204, 204, 204));
+            drawChannel(0, IM_COL32(180, 180, 180, 130), IM_COL32(220, 220, 220, 220));
         } else {
-            drawCurve(2, IM_COL32( 60, 100, 220, 180));   // B
-            drawCurve(1, IM_COL32( 60, 200,  80, 180));   // G
-            drawCurve(0, IM_COL32(220,  60,  60, 180));   // R on top
+            drawChannel(2, IM_COL32( 40,  80, 200, 120), IM_COL32( 80, 140, 255, 220));  // B
+            drawChannel(1, IM_COL32( 40, 180,  60, 120), IM_COL32( 80, 220, 100, 220));  // G
+            drawChannel(0, IM_COL32(200,  40,  40, 120), IM_COL32(255, 100,  80, 220));  // R
         }
 
         dl->AddRect(pos, {pos.x + W, pos.y + H}, IM_COL32(60, 60, 60, 180));
