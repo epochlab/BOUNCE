@@ -197,17 +197,24 @@ void HUD::draw(FrameStats& s) {
         dl->AddRectFilled(pos, {pos.x + W, pos.y + H}, IM_COL32(18, 18, 18, 255));
 
         auto drawChannel = [&](int c, ImU32 fill, ImU32 line) {
-            ImVec2 edge[256];
-            dl->PathClear();
-            dl->PathLineTo({pos.x, pos.y + H});
+            // Filled mass — thin bars at sub-pixel width render as a solid area.
             for (int b = 0; b < 256; ++b) {
                 uint32_t v = std::min(s.hist[c][b], peak);
                 float norm = sqrtf(float(v) / float(peak));
-                edge[b] = {pos.x + (b + 0.5f) * bw, pos.y + H * (1.0f - norm)};
-                dl->PathLineTo(edge[b]);
+                float x0 = pos.x + b * bw;
+                dl->AddRectFilled({x0, pos.y + H - norm * H}, {x0 + bw + 0.5f, pos.y + H}, fill);
             }
-            dl->PathLineTo({pos.x + W, pos.y + H});
-            dl->PathFillConvex(fill);
+            // Smooth outline — 9-bin box filter removes per-bin noise.
+            ImVec2 edge[256];
+            for (int b = 0; b < 256; ++b) {
+                float sum = 0.0f; int cnt = 0;
+                for (int k = b - 4; k <= b + 4; ++k) {
+                    if (k < 0 || k > 255) continue;
+                    sum += sqrtf(float(std::min(s.hist[c][k], peak)) / float(peak));
+                    ++cnt;
+                }
+                edge[b] = {pos.x + (b + 0.5f) * bw, pos.y + H * (1.0f - sum / cnt)};
+            }
             dl->AddPolyline(edge, 256, line, 0, 1.0f);
         };
 
