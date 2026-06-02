@@ -4,6 +4,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Histogram Fixes + FPS Graph] — 2026-06-02
+
+- **Histogram — internal diagonal artefacts fixed** — `AddConcavePolyFilled` applied AA fringe to every edge of each ear-clip sub-triangle, including internal shared edges; doubled fringes appeared as bright diagonal lines through every channel fill. Fixed by disabling `ImDrawListFlags_AntiAliasedFill` for the fill call; `AddPolyline` retains its own AA for the smooth top curve.
+- **Histogram — endpoint spike edge artefacts fixed** — bins 0 and 255 were included in the smooth window and clamped to `sqrt(1)=1.0`, inflating adjacent bins with a smaller `cnt` denominator. This produced steep near-vertical transitions visible in all passes (luminance, UV, wireframe). Fixed by excluding endpoints from the window (`k < 1 || k > 254`).
+- **Histogram — 2-channel AOV support** — UV and Fresnel (RG, B constant zero) now detect and skip the inactive B channel; overlap is computed as `min(R,G)` so the white zone correctly marks where both channels coincide.
+- **Histogram — inactive channel flat-line artefact fixed** — 2-channel AOVs no longer draw a flat B outline along the histogram's bottom border.
+- **Histogram — smoothing radius unified** — greyscale non-binary path uses `radius=4` (9-bin) matching the colour path for consistent appearance across all AOV types.
+- **FPS graph — average FPS overlay** — a red horizontal line marks the smoothed average FPS on the frame-timing graph alongside the white instantaneous trace.
+
+---
+
 ## [AOVs + Histogram] — 2026-06-02
 
 - **AOV reorder** — modes resequenced to group perceptual channels first: beauty → alpha → luminance → hsv → bounds → wireframe → depth → world_pos → world_normals → uv → albedo → direct_diffuse → direct_refl → shading_normal → ao → fresnel (16 total); all mode integer constants updated consistently across `basic.frag`, `blit.frag`, and `main.cpp`
