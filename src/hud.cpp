@@ -194,27 +194,41 @@ void HUD::draw(FrameStats& s) {
         // Grayscale: full 256-bin peak, no smoothing — preserves spikes at 0/255 (alpha, depth).
         // Colour: interior-only peak + 9-bin smooth — avoids clipping bins dominating scale.
         float smooth[3][256];
+        // Helper: smooth a single channel into smooth[c] using interior peak + 9-bin filter.
+        auto smoothChannel = [&](int c, uint32_t peak) {
+            for (int b = 0; b < 256; ++b) {
+                float sum = 0.0f; int cnt = 0;
+                for (int k = b - 4; k <= b + 4; ++k) {
+                    if (k < 0 || k > 255) continue;
+                    sum += sqrtf(float(std::min(s.hist[c][k], peak)) / float(peak));
+                    ++cnt;
+                }
+                smooth[c][b] = sum / cnt;
+            }
+        };
+
         if (isGray) {
-            uint32_t pk = 1;
-            for (int b = 0; b < 256; ++b) pk = std::max(pk, s.hist[0][b]);
-            for (int b = 0; b < 256; ++b)
-                smooth[0][b] = sqrtf(float(s.hist[0][b]) / float(pk));
+            // Near-binary (e.g. alpha mask): <1% of pixels in interior bins.
+            // Use full-range peak + no smoothing so the end-spikes are visible.
+            uint32_t interiorTotal = 0;
+            for (int b = 1; b < 255; ++b) interiorTotal += s.hist[0][b];
+            const bool nearBinary = interiorTotal < static_cast<uint32_t>(256 * 144 / 100);
+            if (nearBinary) {
+                uint32_t pk = 1;
+                for (int b = 0; b < 256; ++b) pk = std::max(pk, s.hist[0][b]);
+                for (int b = 0; b < 256; ++b)
+                    smooth[0][b] = sqrtf(float(s.hist[0][b]) / float(pk));
+            } else {
+                uint32_t pk = 1;
+                for (int b = 1; b < 255; ++b) pk = std::max(pk, s.hist[0][b]);
+                smoothChannel(0, pk);
+            }
         } else {
             uint32_t peak = 1;
             for (int c = 0; c < 3; ++c)
                 for (int b = 1; b < 255; ++b)
                     peak = std::max(peak, s.hist[c][b]);
-            for (int c = 0; c < 3; ++c) {
-                for (int b = 0; b < 256; ++b) {
-                    float sum = 0.0f; int cnt = 0;
-                    for (int k = b - 4; k <= b + 4; ++k) {
-                        if (k < 0 || k > 255) continue;
-                        sum += sqrtf(float(std::min(s.hist[c][k], peak)) / float(peak));
-                        ++cnt;
-                    }
-                    smooth[c][b] = sum / cnt;
-                }
-            }
+            for (int c = 0; c < 3; ++c) smoothChannel(c, peak);
         }
 
         auto drawSmooth = [&](const float* vals, ImU32 fill, ImU32 line) {
