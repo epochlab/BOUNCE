@@ -83,10 +83,9 @@ void HUD::draw(FrameStats& s) {
             y += fs + 2.0f;
         };
 
-        if      (s.channelView == 1) drawLabel("R",        IM_COL32(255,  80,  80, 230));
-        else if (s.channelView == 2) drawLabel("G",        IM_COL32( 80, 220,  80, 230));
-        else if (s.channelView == 3) drawLabel("B",        IM_COL32( 80, 140, 255, 230));
-        if (s.invertColors)          drawLabel("Inverted", IM_COL32(255, 255, 255, 200));
+        if      (s.channelView == 1) drawLabel("R", IM_COL32(255,  80,  80, 230));
+        else if (s.channelView == 2) drawLabel("G", IM_COL32( 80, 220,  80, 230));
+        else if (s.channelView == 3) drawLabel("B", IM_COL32( 80, 140, 255, 230));
     }
 
     // ── Floating restore button (visible only when panel is hidden) ──
