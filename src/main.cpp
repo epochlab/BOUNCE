@@ -13,6 +13,10 @@
 #include <cfloat>
 #include <cstring>
 #include <ctime>
+#include <algorithm>
+#include <fstream>
+#include <numeric>
+#include <string_view>
 #include "window.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
@@ -22,6 +26,7 @@
 #include "model.hpp"
 #include "config.hpp"
 #include "log.hpp"
+#include <nlohmann/json.hpp>
 #include "ssao_kernel.hpp"
 
 static Camera* g_camera = nullptr;
@@ -112,7 +117,18 @@ struct SsaoTarget {
     }
 };
 
-int main() {
+int main(int argc, char** argv) {
+    int benchmarkN = 0;
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string_view(argv[i]) == "--benchmark") {
+            char* end = nullptr;
+            long v = std::strtol(argv[i + 1], &end, 10);
+            if (end == argv[i + 1] || *end != '\0' || v <= 0)
+                { fprintf(stderr, "Usage: --benchmark <N>  (N must be a positive integer)\n"); return 1; }
+            benchmarkN = static_cast<int>(v);
+        }
+    }
+
     try {
         constexpr int FRAME_CAP = 0;  // 0 = vsync/unlimited
 
@@ -263,6 +279,14 @@ int main() {
         bool   prevLMB    = false;
         float  smoothFps  = 0.0f;
         double lastTime   = glfwGetTime();
+
+        std::vector<float> cpuTimes, gpuGeomTimes, gpuPostTimes;
+        if (benchmarkN > 0) {
+            cpuTimes.reserve(benchmarkN);
+            gpuGeomTimes.reserve(benchmarkN);
+            gpuPostTimes.reserve(benchmarkN);
+            stats.benchmarkMode = true;
+        }
 
         bool skyVisible = cfg.hdri.visible;
 
@@ -542,7 +566,7 @@ int main() {
             glEnable(GL_DEPTH_TEST);
 
             // ── Histogram (throttled readback every 4 frames) ─────
-            {
+            if (!stats.benchmarkMode) {
                 static int  histTick = 0;
                 static uint8_t histPx[256 * 144 * 3];
                 if (++histTick >= 4) {
@@ -605,9 +629,23 @@ int main() {
             stats.numObjects      = 1;
             stats.objects[0]      = {geom.name().c_str(), geom.triangleCount(), geom.indexCount()};
 
-            hud.beginFrame();
-            hud.draw(stats);
-            hud.endFrame();
+            if (stats.benchmarkMode) {
+                // Skip GPU_QUERY_FRAMES warm-up frames: ring buffer zeros + Metal PSO JIT.
+                static int warmup = GPU_QUERY_FRAMES;
+                if (warmup > 0) { --warmup; }
+                else {
+                    cpuTimes.push_back(stats.frameTimeMs);
+                    gpuGeomTimes.push_back(stats.gpuGeomMs);
+                    gpuPostTimes.push_back(stats.gpuPostMs);
+                    if (static_cast<int>(cpuTimes.size()) >= benchmarkN) break;
+                }
+            }
+
+            if (!stats.benchmarkMode) {
+                hud.beginFrame();
+                hud.draw(stats);
+                hud.endFrame();
+            }
 
             // Merge native menu one-shot actions into stats, then sync checkmarks.
             if (menuFlags.doCapture)  { stats.doCapture  = true; menuFlags.doCapture  = false; }
@@ -653,6 +691,38 @@ int main() {
             }
 
             win.swapAndPoll();
+        }
+
+        if (benchmarkN > 0 && !cpuTimes.empty()) {
+            auto summarise = [](std::vector<float> v) {
+                std::sort(v.begin(), v.end());
+                float sum = std::accumulate(v.begin(), v.end(), 0.0f);
+                auto pct  = [&](float p) { return v[static_cast<size_t>(p * (v.size() - 1))]; };
+                return nlohmann::json{
+                    {"mean", sum / v.size()},
+                    {"p50",  pct(0.50f)},
+                    {"p95",  pct(0.95f)},
+                    {"p99",  pct(0.99f)},
+                    {"max",  pct(1.00f)},
+                };
+            };
+            float meanCpu = std::accumulate(cpuTimes.begin(), cpuTimes.end(), 0.0f) / cpuTimes.size();
+            nlohmann::json j = {
+                {"meanFps",    1000.0f / meanCpu},
+                {"cpuFrameMs", summarise(cpuTimes)},
+                {"gpuGeomMs",  summarise(gpuGeomTimes)},
+                {"gpuPostMs",  summarise(gpuPostTimes)},
+                {"config", {
+                    {"width",          BASE_W},
+                    {"height",         BASE_H},
+                    {"iblSamples",     cfg.render.iblSamples},
+                    {"ssaoHalfRes",    cfg.shading.ssaoHalfRes},
+                    {"ssaoBlurRadius", cfg.shading.ssaoBlurRadius},
+                }},
+            };
+            std::ofstream f("benchmarks/baseline.json");
+            if (!f) { LOG_E("Could not open benchmarks/baseline.json for writing"); }
+            else    { f << j.dump(2) << '\n'; LOG_I("Benchmark written to benchmarks/baseline.json"); }
         }
 
         rt.destroy();

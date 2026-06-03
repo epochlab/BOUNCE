@@ -25,6 +25,7 @@ struct FrameStats {
     float     triPerSec       = 0.0f;   // Mtri/s
     float     mpixPerSec      = 0.0f;   // Mpix/s
     int       frameCap        = 0;      // 0 = vsync/unlimited
+    bool      benchmarkMode  = false;
     float     fpsHistory[128]{};
     int       fpsHistoryOffset = 0;
 
