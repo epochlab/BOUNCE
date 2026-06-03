@@ -5,13 +5,13 @@ Re-run `./build/KODAK --benchmark 300` after each step and save the result to `b
 
 ---
 
-## Step 0 — Baseline Benchmark
-- [ ] Add `--benchmark <N>` CLI flag to `src/main.cpp`: disable vsync, skip HUD/histogram, run N frames, exit
-- [ ] Accumulate per-frame CPU frame time + GPU geometry + GPU post into `std::vector<float>`
-- [ ] Write `benchmarks/baseline.json` at exit via nlohmann/json: mean/P50/P95/P99/max of each metric, mean FPS, config snapshot (resolution, iblSamples, ssaoHalfRes, ssaoBlurRadius)
-- [ ] Add `FrameStats::benchmarkMode` bool to `src/ui/hud.hpp` to gate HUD drawing
-- [ ] Verify: `./build/KODAK --benchmark 300` exits cleanly and writes JSON; mean FPS matches HUD FPS within ~5%
-- [ ] Commit `benchmarks/baseline.json` to the repo
+## Step 0 — Baseline Benchmark ✓
+- [x] Add `--benchmark <N>` CLI flag to `src/main.cpp`: disable vsync, skip HUD/histogram, run N frames, exit
+- [x] Accumulate per-frame CPU frame time + GPU geometry + GPU post into `std::vector<float>`
+- [x] Write `benchmarks/baseline.json` at exit via nlohmann/json: mean/P50/P95/P99/max of each metric, mean FPS, config snapshot (resolution, iblSamples, ssaoHalfRes, ssaoBlurRadius)
+- [x] Add `FrameStats::benchmarkMode` bool to `src/ui/hud.hpp` to gate HUD drawing
+- [x] Verify: `./build/KODAK --benchmark 300` exits cleanly and writes JSON; mean FPS matches HUD FPS within ~5%
+- [x] Commit `benchmarks/baseline.json` to the repo
 
 ---
 
