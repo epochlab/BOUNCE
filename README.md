@@ -167,13 +167,13 @@ Tests run headless — no display or GPU session required. Each test case regist
 | AOVs — Reorder, add HSV AOV, RGB histogram in HUD. 2-channel AOV support (UV/Fresnel), histogram artefact fixes (diagonal fringe, endpoint spikes), FPS graph avg overlay. | ✓ |
 | Directory Structure — domain-based layout: core/, render/, camera/, ui/ | ✓ |
 | Tests — Catch2 v3 suite, 91 tests / 571 assertions, PBR math, all 16 AOVs, SSAO, CPU math, headless GL | ✓ |
-| HUD: Waveform, AOV min/max (Depth), 2D groundplane, overlay - cross, camera square, aspect safe zones, grid (3x3 with sub-lines which are darker)
+| HUD: Waveform, AOV min/max (Depth), 2D groundplane, overlay - cross, camera square, aspect safe zones, grid (3x3 with sub-lines which are darker) | planned |
 | Color Management — OpenEXR I/O linear pipeline, OCIO ACES workflow w/ sRGB and Rec709 viewing LUTs | planned |
 | Camera & Lens Effects — ISO, f-stop, shutter speed, DoF, focus distance, chromatic aberration, anamorphic lenses, aspect ratio, Kelvin-based lighting controls, film grain | planned |
 | Shader update — RGB albedo color parameter (white default), indirect (self-reflection, refraction, SSS) | planned |
 | Ray Tracing — shadows, area lights, indirect illumination, brute-force path tracing | planned |
 | Sampling — adaptive sampling, multiple importance sampling (MIS) | planned |
-| Displacement: Height map, Displacement bounds, SubDivision at Render Time
+| Displacement: Height map, Disp. bounds, OpenSubD | planned |
 | Geometry & Shader Library — reusable assets, camera presets, and materials files and presets, scene import/export | planned |
 | Test Scenes — teapot, cornell box, three-sphere material test with curved backdrop | planned |
 | Future Features — 2d groundplane, alembic (cam and geo), turntable, macbeth ColorChecker, diffusion rendering, cross-platform support (NVIDIA and Apple Silicon) | planned |
