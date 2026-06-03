@@ -115,7 +115,7 @@ int main() {
     try {
         constexpr int FRAME_CAP = 0;  // 0 = vsync/unlimited
 
-        AppConfig cfg = loadConfig("profile.json", "scene.json");
+        AppConfig cfg = loadConfig("config/profile.json", "config/scene.json");
         const int BASE_W      = cfg.render.width  > 0 ? cfg.render.width  : 2048;
         const int BASE_H      = cfg.render.height > 0 ? cfg.render.height : 1152;
         const int downsample  = cfg.render.downsample > 0 ? cfg.render.downsample : 2;
@@ -132,35 +132,35 @@ int main() {
         initOsxMenuBar(&menuFlags);
 
         // ── Shaders ────────────────────────────────────────────────
-        Shader shader("shaders/basic.vert", "shaders/basic.frag");
+        Shader shader("shaders/geometry/pbr.vert", "shaders/geometry/pbr.frag");
         shader.use();
         shader.set("uAlbedo",     0);
         shader.set("uSkyHDR",     1);
         shader.set("uNormalMap",  2);
         shader.set("uIblSamples", cfg.render.iblSamples);
 
-        Shader blitShader("shaders/blit.vert", "shaders/blit.frag");
+        Shader blitShader("shaders/post/blit.vert", "shaders/post/blit.frag");
         blitShader.use();
         blitShader.set("uFrame", 0);
         blitShader.set("uAO",    1);
         blitShader.set("uDepth", 2);
 
-        Shader skyShader("shaders/sky.vert", "shaders/sky.frag");
+        Shader skyShader("shaders/sky/sky.vert", "shaders/sky/sky.frag");
         skyShader.use();
         skyShader.set("uSkyHDR", 0);
 
-        Shader ssaoShader("shaders/ssao.vert", "shaders/ssao.frag");
+        Shader ssaoShader("shaders/post/ssao.vert", "shaders/post/ssao.frag");
         ssaoShader.use();
         ssaoShader.set("gNormal",   0);
         ssaoShader.set("gDepth",    1);
         ssaoShader.set("uNoiseTex", 2);
 
-        Shader blurShader("shaders/ssao.vert", "shaders/ssao_blur.frag");
+        Shader blurShader("shaders/post/ssao.vert", "shaders/post/ssao_blur.frag");
         blurShader.use();
         blurShader.set("uSSAO",        0);
         blurShader.set("uBlurRadius",  cfg.shading.ssaoBlurRadius);
 
-        Shader lineShader("shaders/line.vert", "shaders/line.frag");
+        Shader lineShader("shaders/debug/bounds.vert", "shaders/debug/bounds.frag");
 
         // ── Camera ─────────────────────────────────────────────────
         Camera camera(cfg.camera.position, win.aspectRatio(),
@@ -654,7 +654,7 @@ int main() {
             if (stats.doSaveJson) {
                 cfg.camera.position    = camera.position();
                 cfg.camera.focalLength = camera.focalLength();
-                saveConfig(cfg, "scene.json");
+                saveConfig(cfg, "config/scene.json");
                 LOG_I("Scene saved.");
                 stats.doSaveJson = false;
             }

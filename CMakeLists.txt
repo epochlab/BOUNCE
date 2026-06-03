@@ -68,21 +68,29 @@ target_compile_definitions(imgui_lib PUBLIC GL_SILENCE_DEPRECATION GLFW_INCLUDE_
 
 add_executable(KODAK
     src/main.cpp
-    src/window.cpp
-    src/shader.cpp
-    src/camera.cpp
-    src/mesh.cpp
-    src/texture.cpp
-    src/hud.cpp
-    src/model.cpp
-    src/config.cpp
-    src/menu_osx.mm
-    src/cgltf_impl.cpp
-    src/stb_write_impl.cpp
+    src/render/window.cpp
+    src/render/shader.cpp
+    src/camera/camera.cpp
+    src/render/mesh.cpp
+    src/render/texture.cpp
+    src/ui/hud.cpp
+    src/render/model.cpp
+    src/core/config.cpp
+    src/ui/menu_osx.mm
+    src/render/cgltf_impl.cpp
+    src/render/stb_write_impl.cpp
     external/stb/stb_image.cpp
 )
 
-target_include_directories(KODAK PRIVATE src external/stb ${cgltf_SOURCE_DIR})
+target_include_directories(KODAK PRIVATE
+    src
+    src/core
+    src/render
+    src/camera
+    src/ui
+    external/stb
+    ${cgltf_SOURCE_DIR}
+)
 
 target_compile_definitions(KODAK PRIVATE
     GL_SILENCE_DEPRECATION
