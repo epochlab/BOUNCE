@@ -38,7 +38,7 @@ void initOsxMenuBar(OsxMenuFlags* flags) {
                                                keyEquivalent:@""];
     NSMenu* viewMenu = [[NSMenu alloc] initWithTitle:@"View"];
 
-    NSMenuItem* captureItem = [[NSMenuItem alloc] initWithTitle:@"Save EXR"
+    NSMenuItem* captureItem = [[NSMenuItem alloc] initWithTitle:@"Export OpenEXR"
                                                          action:@selector(actionCapture:)
                                                   keyEquivalent:@""];
     captureItem.target = g_delegate;

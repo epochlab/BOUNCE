@@ -1097,7 +1097,7 @@ int main(int argc, char** argv) {
                         read_rgb(rt.normalTex, "normals", 1.0f),
                         read_depth(rt.depthTex),
                     });
-                    LOG_I("EXR saved: " + fname);
+                    LOG_I("Export OpenEXR: " + fname);
                 } catch (const std::exception& e) {
                     LOG_E("EXR save failed: " + std::string(e.what()));
                 }
