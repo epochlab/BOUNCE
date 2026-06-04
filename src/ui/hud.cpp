@@ -231,7 +231,7 @@ void HUD::draw(FrameStats& s) {
     ImGui::Checkbox("Enable DoF", &s.camDofEnabled);
     if (s.camDofEnabled) {
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::SliderFloat("##focusDist", &s.camFocusDist, 0.1f, 100.f, "%.2f m");
+        ImGui::SliderFloat("##focusDist", &s.camFocusDist, 0.1f, 100.f, "%.2f m", ImGuiSliderFlags_Logarithmic);
     }
 
     // ── Aspect Ratio ──────────────────────────────────────────

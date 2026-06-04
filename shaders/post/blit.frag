@@ -29,6 +29,8 @@ void main() {
         float ao    = (depth >= 0.9999) ? 1.0 : texture(uAO, vUV).r;
         color *= ao;
         color *= uExposure;
+    } else if (uViewMode == 9 || uViewMode == 10) {
+        color *= uExposure;
     } else if (uViewMode == 8) {
         float k = dot(color, vec3(0.2126, 0.7152, 0.0722));
         color = vec3(k);

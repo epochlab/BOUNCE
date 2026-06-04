@@ -895,9 +895,18 @@ int main(int argc, char** argv) {
                     const int cur  = histTick & 1;
                     const int prev = cur ^ 1;
 
+                    int srcY0 = 0, srcY1 = win.height();
+                    if (stats.camAspectEnabled) {
+                        float scr  = float(win.width()) / float(win.height());
+                        float barH = 0.5f * (1.0f - scr / stats.camAspectRatio);
+                        if (barH > 0.0f) {
+                            srcY0 = static_cast<int>(std::round(barH * float(win.height())));
+                            srcY1 = win.height() - srcY0;
+                        }
+                    }
                     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
                     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, histFBO);
-                    glBlitFramebuffer(0, 0, win.width(), win.height(),
+                    glBlitFramebuffer(0, srcY0, win.width(), srcY1,
                                       0, 0, 256, 144,
                                       GL_COLOR_BUFFER_BIT, GL_LINEAR);
                     glBindFramebuffer(GL_READ_FRAMEBUFFER, histFBO);

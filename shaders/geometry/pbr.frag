@@ -97,7 +97,7 @@ void main() {
 
     } else if (uViewMode == 9) {
         // direct_diffuse — precomputed irradiance, no albedo, no Fresnel mask
-        gColor = vec4(texture(uIrradianceTex, sampleEnvUV(shadingNormal())).rgb, 1.0);
+        gColor = vec4(texture(uIrradianceTex, sampleEnvUV(shadingNormal())).rgb * uHdriIntensity, 1.0);
 
     } else if (uViewMode == 10) {
         // direct_refl — prefiltered specular with lobe-centre shift (matches pre-Step-5 reflectionIBL)
@@ -112,7 +112,7 @@ void main() {
         vec3  dir         = normalize(mix(r, n, a_sq));
         vec3  prefiltered = textureLod(uPrefilteredTex, sampleEnvUV(dir), uRoughness * uMaxMipLevel).rgb;
         vec3  F           = fresnelWeighted(F0, NoV, uRoughness);
-        gColor = vec4(F * prefiltered, 1.0);
+        gColor = vec4(F * prefiltered * uHdriIntensity, 1.0);
 
     } else if (uViewMode == 11) {
         // world_pos — normalized against scene AABB for a continuous colour gradient
