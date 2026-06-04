@@ -293,6 +293,35 @@ int main(int argc, char** argv) {
 
         Shader lineShader("shaders/debug/bounds.vert", "shaders/debug/bounds.frag");
 
+        // ── Pre-cached per-frame uniform locations ─────────────────
+        const GLint pbrLocView          = shader.uniformLoc("uView");
+        const GLint pbrLocProjection    = shader.uniformLoc("uProjection");
+        const GLint pbrLocViewMode      = shader.uniformLoc("uViewMode");
+        const GLint pbrLocNear          = shader.uniformLoc("uNear");
+        const GLint pbrLocFar           = shader.uniformLoc("uFar");
+        const GLint pbrLocCamPos        = shader.uniformLoc("uCamPos");
+        const GLint pbrLocRoughness     = shader.uniformLoc("uRoughness");
+        const GLint pbrLocMetallic      = shader.uniformLoc("uMetallic");
+        const GLint pbrLocIOR           = shader.uniformLoc("uIOR");
+        const GLint pbrLocNormalMatrix  = shader.uniformLoc("uNormalMatrix");
+        const GLint pbrLocHdriRotMat    = shader.uniformLoc("uHdriRotMat");
+
+        const GLint skyLocInvVP         = skyShader.uniformLoc("uInvVP");
+        const GLint skyLocHdriRotMat    = skyShader.uniformLoc("uHdriRotMat");
+        const GLint skyLocHdriExposure  = skyShader.uniformLoc("uHdriExposure");
+        const GLint skyLocHdriFlipV     = skyShader.uniformLoc("uHdriFlipV");
+
+        const GLint ssaoLocProj         = ssaoShader.uniformLoc("uProj");
+        const GLint ssaoLocInvProj      = ssaoShader.uniformLoc("uInvProj");
+        const GLint ssaoLocRadius       = ssaoShader.uniformLoc("uRadius");
+        const GLint ssaoLocBias         = ssaoShader.uniformLoc("uBias");
+
+        const GLint blitLocViewMode     = blitShader.uniformLoc("uViewMode");
+        const GLint blitLocChannelView  = blitShader.uniformLoc("uChannelView");
+        const GLint blitLocInvert       = blitShader.uniformLoc("uInvert");
+
+        const GLint lineLocVP           = lineShader.uniformLoc("uVP");
+
         // ── Camera ─────────────────────────────────────────────────
         Camera camera(cfg.camera.position, win.aspectRatio(),
                       cfg.camera.filmback, cfg.camera.focalLength,
@@ -673,19 +702,19 @@ int main(int argc, char** argv) {
             }
 
             shader.use();
-            shader.set("uView",            view);
-            shader.set("uProjection",      proj);
-            shader.set("uViewMode",        viewMode);
-            shader.set("uNear",            camera.nearPlane());
-            shader.set("uFar",             camera.farPlane());
-            shader.set("uCamPos",          camera.position());
-            shader.set("uRoughness",       cfg.shading.roughness);
-            shader.set("uMetallic",        cfg.shading.metallic);
-            shader.set("uIOR",             cfg.shading.ior);
+            shader.setAt(pbrLocView,         view);
+            shader.setAt(pbrLocProjection,   proj);
+            shader.setAt(pbrLocViewMode,     viewMode);
+            shader.setAt(pbrLocNear,         camera.nearPlane());
+            shader.setAt(pbrLocFar,          camera.farPlane());
+            shader.setAt(pbrLocCamPos,       camera.position());
+            shader.setAt(pbrLocRoughness,    cfg.shading.roughness);
+            shader.setAt(pbrLocMetallic,     cfg.shading.metallic);
+            shader.setAt(pbrLocIOR,          cfg.shading.ior);
 
             const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(geomMat)));
-            shader.set("uNormalMatrix", normalMatrix);
-            shader.set("uHdriRotMat",   hdriRotMat);
+            shader.setAt(pbrLocNormalMatrix, normalMatrix);
+            shader.setAt(pbrLocHdriRotMat,   hdriRotMat);
 
             Frustum frustum;
             frustum.update(proj * view);
@@ -697,10 +726,10 @@ int main(int argc, char** argv) {
                 glDisable(GL_DEPTH_TEST);
                 glDepthMask(GL_FALSE);
                 skyShader.use();
-                skyShader.set("uInvVP",        invVP);
-                if (hdriDirty) skyShader.set("uHdriRotMat", hdriRotMat);
-                skyShader.set("uHdriExposure", cfg.hdri.exposure);
-                skyShader.set("uHdriFlipV",    cfg.hdri.flipV);
+                skyShader.setAt(skyLocInvVP,        invVP);
+                if (hdriDirty) skyShader.setAt(skyLocHdriRotMat, hdriRotMat);
+                skyShader.setAt(skyLocHdriExposure, cfg.hdri.exposure);
+                skyShader.setAt(skyLocHdriFlipV,    cfg.hdri.flipV);
                 skyTex.bind(0);
                 glBindVertexArray(blitVAO);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -725,7 +754,7 @@ int main(int argc, char** argv) {
             if (viewMode == 3) {
                 glDepthMask(GL_FALSE);
                 lineShader.use();
-                lineShader.set("uVP", proj * view);
+                lineShader.setAt(lineLocVP, proj * view);
                 glBindVertexArray(boxVAO);
                 glDrawArrays(GL_LINES, 0, 24);
                 glBindVertexArray(0);
@@ -745,10 +774,10 @@ int main(int argc, char** argv) {
             glViewport(0, 0, AO_W, AO_H);
             glDisable(GL_DEPTH_TEST);
             ssaoShader.use();
-            ssaoShader.set("uProj",    proj);
-            ssaoShader.set("uInvProj", invProj);
-            ssaoShader.set("uRadius",  cfg.shading.ssaoRadius);
-            ssaoShader.set("uBias",    cfg.shading.ssaoBias);
+            ssaoShader.setAt(ssaoLocProj,    proj);
+            ssaoShader.setAt(ssaoLocInvProj, invProj);
+            ssaoShader.setAt(ssaoLocRadius,  cfg.shading.ssaoRadius);
+            ssaoShader.setAt(ssaoLocBias,    cfg.shading.ssaoBias);
             glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, rt.normalTex);
             glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, rt.depthTex);
             glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, noiseTex);
@@ -781,9 +810,9 @@ int main(int argc, char** argv) {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(0, 0, win.width(), win.height());
             blitShader.use();
-            blitShader.set("uViewMode",    viewMode);
-            blitShader.set("uChannelView", channelView);
-            blitShader.set("uInvert",      invertColors);
+            blitShader.setAt(blitLocViewMode,    viewMode);
+            blitShader.setAt(blitLocChannelView, channelView);
+            blitShader.setAt(blitLocInvert,      invertColors);
             glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, rt.colorTex);
             glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, blurRt.tex);
             glActiveTexture(GL_TEXTURE2); glBindTexture(GL_TEXTURE_2D, rt.depthTex);

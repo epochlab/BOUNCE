@@ -166,9 +166,21 @@ Replaces per-pixel IBL sampling loops (2 × N Fibonacci texture fetches per frag
 
 ---
 
-## Step 7 — Uniform Location Pre-Cache
-- [ ] Add overload family to `src/render/shader.hpp/cpp`: `void setAt(GLint loc, float)`, `setAt(GLint loc, int)`, `setAt(GLint loc, const glm::mat4&)`, `setAt(GLint loc, const glm::mat3&)`, `setAt(GLint loc, const glm::vec3&)`, `setAt(GLint loc, const glm::vec2&)` — each calls the appropriate `glUniform*` directly with the pre-queried location, bypassing the `unordered_map`
-- [ ] Expose `GLint uniformLoc(const std::string& name) const` on `Shader` (thin wrapper around `glGetUniformLocation`) for the one-time queries at shader construction
-- [ ] In `src/main.cpp`, after each shader is compiled, query and store all per-frame uniform locations as `GLint` fields (e.g. `GLint locView = shader.uniformLoc("uView")`)
-- [ ] Replace all in-loop `shader.set("uView", view)` calls with `shader.setAt(locView, view)` equivalents
-- [ ] Verify: all Catch2 tests pass; no visual change; CPU frame time is unchanged or marginally lower
+## Step 7 — Uniform Location Pre-Cache ✓
+- [x] Add overload family to `src/render/shader.hpp/cpp`: `void setAt(GLint loc, float)`, `setAt(GLint loc, int)`, `setAt(GLint loc, const glm::mat4&)`, `setAt(GLint loc, const glm::mat3&)`, `setAt(GLint loc, const glm::vec3&)`, `setAt(GLint loc, const glm::vec2&)`, `setAt(GLint loc, bool)` — each calls the appropriate `glUniform*` directly with the pre-queried location, bypassing the `unordered_map`
+- [x] Expose `GLint uniformLoc(const std::string& name) const` on `Shader` (thin wrapper around `glGetUniformLocation`) for the one-time queries at shader construction
+- [x] In `src/main.cpp`, after all shaders are compiled, query and store all per-frame uniform locations as 23 `const GLint` fields (`pbrLoc*`, `skyLoc*`, `ssaoLoc*`, `blitLoc*`, `lineLocVP`)
+- [x] Replace all 23 in-loop `shader.set("u*", value)` calls across PBR, sky, SSAO, blit, and line shaders with `shader.setAt(loc, value)` equivalents; one-time setup calls (texture unit bindings, noise scale, etc.) remain as `set()` — not in the hot path
+- [x] All 92 Catch2 tests pass; render output visually identical
+
+**Results** (`benchmarks/after-step7-uniform-precache.json`, 300 frames):
+
+| Metric | after-step6 | after-step7 | Δ |
+|---|---|---|---|
+| Mean FPS | 213.3 | 210.9 | ~0 (run variance) |
+| CPU mean | 4.69 ms | 4.74 ms | noise |
+| GPU Geom mean | 0.79 ms | 0.80 ms | noise |
+| GPU SSAO mean | 0.80 ms | 0.82 ms | noise |
+| GPU Blur mean | 0.045 ms | 0.055 ms | noise |
+
+**Note:** No measurable FPS gain, as expected — the `unordered_map` string-hash cost (~23 lookups/frame) is negligible compared to `glUniform*` driver overhead at 200+ FPS. The change is still correct: `setAt` is strictly cheaper than `set` and eliminates the hot-path allocation risk from `std::string` temporaries. The `m_locCache` map is retained for one-time setup calls.
