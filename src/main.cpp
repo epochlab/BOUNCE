@@ -486,7 +486,7 @@ int main(int argc, char** argv) {
         glm::mat3 cachedHdriRot(1.f);
         float     cachedHdriExposure = std::numeric_limits<float>::max();
         bool      cachedHdriFlipV   = false;
-        bool      hdriDirty  = false;
+        bool      hdriDirty       = false;
         bool      iblPending = false;
 
         // ── Initial IBL bake (pre-loop so frame 1 uses correct maps) ──
@@ -504,7 +504,7 @@ int main(int argc, char** argv) {
             cachedHdriFlipV    = cfg.hdri.flipV;
             skyShader.use();
             skyShader.set("uHdriRotMat", cachedHdriRot);
-            baker.bake(skyTex.id(), cachedHdriRot, cfg.hdri.exposure, cfg.hdri.flipV, cfg.render.iblSamples);
+            baker.bake(skyTex.id(), glm::mat3(1.f), cfg.hdri.exposure, cfg.hdri.flipV, cfg.render.iblSamples);
         }
 
         while (!win.shouldClose()) {
@@ -531,8 +531,7 @@ int main(int argc, char** argv) {
                                  || cfg.hdri.flipV    != cachedHdriFlipV);
                 cachedHdriExposure = cfg.hdri.exposure;
                 cachedHdriFlipV    = cfg.hdri.flipV;
-                // Defer rotation-only bake while slider is held; exposure/flipV bake immediately.
-                if (nonRotDirty || !stats.hdriYawDragging) iblPending = true;
+                if (nonRotDirty) iblPending = true;
             }
             const glm::mat3& hdriRotMat = cachedHdriRot;
 
@@ -676,6 +675,7 @@ int main(int argc, char** argv) {
 
             const glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(geomMat)));
             shader.set("uNormalMatrix", normalMatrix);
+            shader.set("uHdriRotMat",   hdriRotMat);
 
             Frustum frustum;
             frustum.update(proj * view);
@@ -946,7 +946,7 @@ int main(int argc, char** argv) {
             win.swapAndPoll();
 
             if (iblPending) {
-                baker.bake(skyTex.id(), cachedHdriRot, cfg.hdri.exposure, cfg.hdri.flipV, cfg.render.iblSamples);
+                baker.bake(skyTex.id(), glm::mat3(1.f), cfg.hdri.exposure, cfg.hdri.flipV, cfg.render.iblSamples);
                 iblPending = false;
             }
         }

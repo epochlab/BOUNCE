@@ -99,45 +99,50 @@ Re-run `./build/KODAK --benchmark 300` after each step and save the result to `b
 ---
 
 ## Step 5 — IBL Precomputation (irradiance + split-sum specular) ✓
-**Largest change. Commit alone — do not combine with any other step.**
 
-The goal is to replace the per-pixel IBL sampling loops (2 × N texture fetches per fragment, every frame)
-with three texture lookups into precomputed maps baked once at HDRI load time.
+Replaces per-pixel IBL sampling loops (2 × N Fibonacci texture fetches per fragment, every frame) with three simple texture lookups into maps baked once at startup. HDRI rotation stays a per-frame mat3 uniform so the yaw slider remains fully interactive; exposure and flipV trigger a rebake.
 
-### Bake shaders (new files)
-- [x] Create `shaders/bake/irradiance.frag` — Fibonacci cosine hemisphere integration per output texel direction
-- [x] Create `shaders/bake/prefilter.frag` — GGX lobe integration per direction per roughness; one draw call per mip level
-- [x] Create `shaders/bake/brdf_lut.frag` — split-sum BRDF integral (F_scale, F_bias) per Karis 2013
-- [x] All bake shaders share `shaders/post/blit.vert`
+### Bake shaders (new files, all share `shaders/post/blit.vert`)
+- [x] `shaders/bake/irradiance.frag` — Fibonacci cosine hemisphere integration; sqrt sample distribution (exponent 0.5) for sky-bias match; baked with identity rotation
+- [x] `shaders/bake/prefilter.frag` — GGX lobe integration per roughness mip; lobe-centre shift `normalize(mix(r, n, a²))` to preserve luminance; baked with identity rotation
+- [x] `shaders/bake/brdf_lut.frag` — split-sum BRDF integral (F_scale, F_bias) per Karis 2013; baked once at startup (view-independent)
 
-### New textures
-- [x] `irradianceTex` — GL_RGB16F, 128×64; baked at startup and rebaked on HDRI dirty
-- [x] `prefilteredTex` — GL_RGB16F, 512×256, 5 mip levels
-- [x] `brdfLUT` — GL_RG16F, 512×512; baked once (view-independent)
-- [x] `Texture::createEmpty(int w, int h, GLenum internalFmt, bool generateMipmaps)` added
+### New GPU textures
+- [x] `irradianceTex` — GL_RGB16F, 128×64; rebaked on exposure/flipV change
+- [x] `prefilteredTex` — GL_RGB16F, 512×256, 5 mip levels; rebaked on exposure/flipV change
+- [x] `brdfLUT` — GL_RG16F, 512×512; baked once at startup
+- [x] `Texture::createEmpty(w, h, internalFmt, generateMipmaps)` static factory added
 
 ### `pbr.frag` changes
-- [x] New uniforms: `uIrradianceTex` (unit 3), `uPrefilteredTex` (unit 4), `uBrdfLUT` (unit 5), `uMaxMipLevel`
-- [x] Replaced `irradianceIBL` and `reflectionIBL` loops with 3 texture lookups; dead code removed
+- [x] Added uniforms: `uIrradianceTex` (unit 3), `uPrefilteredTex` (unit 4), `uBrdfLUT` (unit 5), `uMaxMipLevel`, `uHdriRotMat`
+- [x] `sampleEnvUV(dir)`: applies `uHdriRotMat * dir` before equirectangular projection — rotation is per-frame, not baked
+- [x] Replaced `irradianceIBL()` and `reflectionIBL()` sampling loops with texture lookups; dead uniforms and functions removed
+- [x] Beauty and `direct_refl` modes use lobe-centre shift for specular to match pre-Step-5 luminance
 
 ### `main.cpp` changes
-- [x] `IblBaker` struct with `create()`, `bake()`, `destroy()`
-- [x] Initial bake pre-loop; rebake via `iblPending` flag on exposure/rotation/flipV change
-- [x] `"Baking IBL..."` ImGui overlay when `iblPending`
-- [x] Baker textures bound on units 3–5; `hdriDirty` extended to cover exposure and flipV
+- [x] `IblBaker` struct: `create()` compiles bake shaders + allocates textures/FBO; `bake()` renders BRDF LUT once then irradiance + prefilter mips; `destroy()` frees GL resources
+- [x] Initial bake pre-loop (always with `glm::mat3(1.f)` — rotation not baked)
+- [x] `iblPending` flag: set on exposure or flipV change only; rotation change just updates `cachedHdriRot` and the `uHdriRotMat` uniform per-frame
+- [x] `"Baking IBL..."` ImGui overlay shown while `iblPending`
+- [x] Baker textures bound on units 3–5 each frame
+
+### Test harness updates
+- [x] Three white-map IBL textures (`iblIrradianceTex`, `iblPrefilteredTex`, `iblBrdfLutTex`) bound on units 3–5
+- [x] `uHdriRotMat` set to identity; mode 10 expectation updated for split-sum Fresnel (0.04)
 
 ### Verification
-- [x] All 92 Catch2 tests pass (mode 10 expectation updated for split-sum)
-- [x] `gpuGeomMs` fell **82%** (5.1 → 0.9 ms) — exceeds 60–85% target
+- [x] All 92 Catch2 tests pass
+- [x] `gpuGeomMs` fell **90%** (5.1 → 0.5 ms) vs Step 4 baseline
+- [x] HDRI yaw slider updates lighting every frame with zero lag
 - [x] Benchmark saved as `benchmarks/after-step5-ibl-precompute.json`
 
 **Results** (`benchmarks/after-step5-ibl-precompute.json`, 300 frames, iblSamples=8):
 
 | Metric | after-step4 | after-step5 | Δ |
 |---|---|---|---|
-| Mean FPS | 111.7 | **189.8** | +70% |
-| CPU mean | 8.96 ms | **5.27 ms** | −41% |
-| GPU Geom mean | 5.11 ms | **0.91 ms** | **−82%** |
+| Mean FPS | 111.7 | **248.7** | **+123%** |
+| CPU mean | 8.96 ms | **4.02 ms** | −55% |
+| GPU Geom mean | 5.11 ms | **0.53 ms** | **−90%** |
 
 ---
 

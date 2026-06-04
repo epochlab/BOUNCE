@@ -25,14 +25,16 @@ uniform float     uRoughness;      // PBR roughness: 0 = mirror, 1 = fully diffu
 uniform float     uMetallic;       // 0 = dielectric, 1 = metal
 uniform float     uIOR;            // index of refraction for dielectrics (default 1.5)
 uniform mat4      uView;           // view matrix — used to transform shading normal for SSAO
+uniform mat3      uHdriRotMat;     // HDRI rotation applied per-frame; flip/exposure are baked
 
 layout(location = 0) out vec4 gColor;
 layout(location = 1) out vec4 gNormal;  // view-space shading normals for SSAO
 
 const float PI = 3.14159265358979;
 
-// Convert world direction to equirectangular UV (rotation/flip baked into maps).
+// Convert world direction to equirectangular UV. Rotation is per-frame; flip/exposure are baked.
 vec2 sampleEnvUV(vec3 dir) {
+    dir = uHdriRotMat * dir;
     float phi   = atan(dir.z, dir.x);
     float theta = acos(clamp(dir.y, -1.0, 1.0));
     return vec2(phi / (2.0 * PI) + 0.5, 1.0 - theta / PI);
