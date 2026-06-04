@@ -23,11 +23,11 @@
 | Physical Camera — ISO/f-stop/shutter exposure triangle, screen-screen DoF (thin-lens CoC, Poisson-disc), cinematic letterbox, HDRI EV offset + intensity, per-AOV HDRI response | ✓ |
 | Color Management — OpenEXR I/O linear pipeline, OCIO ACES workflow w/ OCIO Display Transform (sRGB / Rec.709), White Balance & Kelvin-based lighting controls | in progress |
 | Rendering — Thin lens model, Physical-based spectral GPU path tracing render engine, Monte Carlo Unbiased Global Illumination (Indirect/Multiple Scattering), Correct exposure, Linear workflow, Adaptive Sampling / Multiple importance sampling (MIS), Recursive tracing, Russian roulette termination, Energy conservation, Spectral light transport, Wavelength sampling, Spectral materials, Spectral dispersion, BSDF / PBR materials, BRDF sampling + Importance Sampling, Next-event estimation, HDR IBL, Tone-mapping, Area lights, Shadows / Soft shadows, BVH acceleration, Fresnel effects, Caustics, Path throughput accumulation, Radiance estimation formulation | planned |
-| Post Lens Effects — DoF, chromatic aberration, anamorphic lenses, film grain | planned |
+| Post Lens Effects — lens distortion, chromatic aberration, film grain | planned |
 | Displacement: Height map, Disp. bounds, OpenSubD | planned |
 | Asset Management — geometry, materials (files and presets), hdr, camera presets | planned |
 | Test Scenes — teapot, cornell box, three-sphere material test with curved backdrop | planned |
-| HUD: Waveform, AOV min/max (Depth), 2D groundplane, overlay - aspect ratio, Rule-of-Thirds grid | planned |
+| HUD: Waveform, AOV min/max (Depth), 2D groundplane, Rule-of-Thirds grid | planned |
 | Future Features — alembic (cam and geo), background, turntable, macbeth ColorChecker, diffusion rendering, cross-platform support (NVIDIA and Apple Silicon) | planned |
 
 --CURRENT TASK: Color Management (in progress)
