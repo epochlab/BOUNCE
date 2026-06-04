@@ -28,6 +28,7 @@ static void walkNodes(const cgltf_node* const* nodes, cgltf_size count,
                       std::vector<SubMesh>& submeshes,
                       glm::mat4& outTransform)
 {
+    outTransform = glm::mat4(1.0f);  // identity until a mesh node is visited
     for (cgltf_size ni = 0; ni < count; ++ni) {
         const cgltf_node* node = nodes[ni];
 
