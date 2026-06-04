@@ -46,13 +46,18 @@ void main() {
     else if (uChannelView == 3) color = vec3(color.b);
     if (uInvert) color = 1.0 - color;
 
-    // Aspect ratio letterbox — 70% opacity bars blended over image.
+    // Aspect ratio letterbox — 70% opacity bars + 1px white edge.
     if (uAspectEnabled) {
-        ivec2 sz   = textureSize(uFrame, 0);
-        float scr  = float(sz.x) / float(sz.y);
-        float barH = 0.5 * (1.0 - uAspectRatio / scr);
-        if (barH > 0.0 && (vUV.y < barH || vUV.y > 1.0 - barH))
-            color *= 0.3;   // retain 30% of image → 70% black overlay
+        ivec2 sz    = textureSize(uFrame, 0);
+        float scr   = float(sz.x) / float(sz.y);
+        float barH  = 0.5 * (1.0 - scr / uAspectRatio);   // correct: scr/ratio
+        if (barH > 0.0) {
+            float lineW  = 1.0 / float(sz.y);
+            bool  onEdge = abs(vUV.y - barH) < lineW || abs(vUV.y - (1.0 - barH)) < lineW;
+            bool  inBar  = vUV.y < barH || vUV.y > 1.0 - barH;
+            if      (onEdge) color = vec3(1.0);
+            else if (inBar)  color *= 0.3;
+        }
     }
 
     FragColor = vec4(color, 1.0);

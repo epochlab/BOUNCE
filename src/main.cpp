@@ -474,6 +474,7 @@ int main(int argc, char** argv) {
         stats.hdriYawDeg       = cfg.hdri.rotation.y;
         stats.hdriFlipV        = cfg.hdri.flipV;
         stats.hdriIntensity    = cfg.hdri.intensity;
+        stats.hdriEvOffset     = cfg.hdri.exposure;
         stats.skyVisible       = cfg.hdri.visible;
         stats.showPanel        = true;
         stats.camISO           = cfg.camera.iso;
@@ -974,6 +975,7 @@ int main(int argc, char** argv) {
             stats.hdriYawDeg      = cfg.hdri.rotation.y;
             stats.hdriFlipV       = cfg.hdri.flipV;
             stats.hdriIntensity   = cfg.hdri.intensity;
+            stats.hdriEvOffset    = cfg.hdri.exposure;
             stats.skyVisible      = skyVisible;
             stats.numObjects      = 1;
             stats.objects[0]      = {geom.name().c_str(), geom.triangleCount(), geom.indexCount()};
@@ -1018,6 +1020,7 @@ int main(int argc, char** argv) {
             cfg.hdri.rotation.y  = stats.hdriYawDeg;
             cfg.hdri.flipV       = stats.hdriFlipV;
             cfg.hdri.intensity   = stats.hdriIntensity;
+            cfg.hdri.exposure    = stats.hdriEvOffset;
             skyVisible           = stats.skyVisible;
             camera.setFocalLength(stats.camFocalLengthMm);
             camera.setISO(stats.camISO);

@@ -78,6 +78,7 @@ struct FrameStats {
     float       hdriYawDeg   = 0.0f;
     bool        hdriFlipV    = false;
     float       hdriIntensity = 1.0f;
+    float       hdriEvOffset  = 0.0f;  // cfg.hdri.exposure — EV offset in stops
 
     // Channel / invert mode
     int         channelView   = 0;    // 0=RGB 1=R 2=G 3=B

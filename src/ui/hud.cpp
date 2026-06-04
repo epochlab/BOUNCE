@@ -206,12 +206,12 @@ void HUD::draw(FrameStats& s) {
             s.camISO = 100.f * std::pow(2.f, static_cast<float>(isoIdx));
     }
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::SliderFloat("f-stop", &s.camFStop, 1.0f, 22.0f, "f/%.1f", ImGuiSliderFlags_Logarithmic);
+    ImGui::SliderFloat("##fstop", &s.camFStop, 1.0f, 22.0f, "f/%.1f", ImGuiSliderFlags_Logarithmic);
     {
         // Shutter speed slider (logarithmic, 1/8000–30 s)
         float shutterDisp = s.camShutterSpeed;
         ImGui::SetNextItemWidth(-1.0f);
-        if (ImGui::SliderFloat("Shutter", &shutterDisp, 1.f/8000.f, 30.f, "%.5f s", ImGuiSliderFlags_Logarithmic))
+        if (ImGui::SliderFloat("##shutter", &shutterDisp, 1.f/8000.f, 30.f, "%.5f s", ImGuiSliderFlags_Logarithmic))
             s.camShutterSpeed = shutterDisp;
         if (s.camShutterSpeed < 0.1f)
             ImGui::TextColored({0.6f, 0.6f, 0.6f, 1.0f}, "  1/%.0f s", 1.f / s.camShutterSpeed);
@@ -230,7 +230,7 @@ void HUD::draw(FrameStats& s) {
     ImGui::Checkbox("Enable DoF", &s.camDofEnabled);
     if (s.camDofEnabled) {
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::SliderFloat("Focus Dist", &s.camFocusDist, 0.1f, 100.f, "%.2f m", ImGuiSliderFlags_Logarithmic);
+        ImGui::SliderFloat("##focusDist", &s.camFocusDist, 0.1f, 100.f, "%.2f m", ImGuiSliderFlags_Logarithmic);
     }
 
     // ── Aspect Ratio ──────────────────────────────────────────
@@ -238,7 +238,7 @@ void HUD::draw(FrameStats& s) {
     ImGui::Checkbox("Letterbox", &s.camAspectEnabled);
     if (s.camAspectEnabled) {
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::SliderFloat("Ratio", &s.camAspectRatio, 1.0f, 4.0f, "%.2f:1");
+        ImGui::SliderFloat("##ratio", &s.camAspectRatio, 1.0f, 4.0f, "%.2f:1");
     }
 
     // ── AOV ───────────────────────────────────────────────────
@@ -375,7 +375,9 @@ void HUD::draw(FrameStats& s) {
     ImGui::SetNextItemWidth(-1.0f);
     ImGui::SliderFloat("##hdriYaw", &s.hdriYawDeg, 1.0f, 360.0f, "Y-axis  %.0f deg");
     ImGui::SetNextItemWidth(-1.0f);
-    ImGui::SliderFloat("Intensity", &s.hdriIntensity, 0.0f, 10.0f, "%.2f");
+    ImGui::SliderFloat("##hdriIntensity", &s.hdriIntensity, 0.0f, 5.0f, "Intensity  %.2f");
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::SliderFloat("##hdriEv", &s.hdriEvOffset, -4.0f, 4.0f, "EV  %.2f");
     ImGui::Checkbox("Flip Y-axis", &s.hdriFlipV);
     ImGui::Checkbox("Enable Background", &s.skyVisible);
 
