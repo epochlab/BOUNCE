@@ -3,13 +3,13 @@
     "width": 2048,
     "height": 1152,
     "downsample": 2,
-    "iblSamples": 8
+    "iblSamples": 16
   },
   "shading": {
     "ior": 1.5,
     "ssaoRadius": 0.5,
     "ssaoBias": 0.025,
-    "ssaoSamples": 8,
+    "ssaoSamples": 16,
     "ssaoBlurRadius": 2,
     "ssaoHalfRes": true
   }
